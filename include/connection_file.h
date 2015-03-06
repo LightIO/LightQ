@@ -23,11 +23,11 @@
 #include "connection.h"
 #include "file_details.h"
 
-namespace prakashq {
+namespace lightq {
 
     //class connection type file
 
-    class connection_file : public connection {
+    class connection_file :  public connection {
     public:
 
         /**
@@ -37,9 +37,15 @@ namespace prakashq {
          * @param uri
          * @param conn_type
          */
-        connection_file(const std::string& directory, const std::string& topic,
-                const std::string& uri, endpoint_type conn_type)
-        : connection(topic, uri, connection::stream_type::stream_file, conn_type) {
+        connection_file(const std::string& directory, 
+                const std::string& topic,
+                const std::string& uri, 
+                endpoint_type conn_type,
+                bool non_blocking= true)
+        : connection(topic, uri, connection::stream_type::stream_file, 
+                conn_type, 
+                connection::socket_connect_type::create_file,
+                non_blocking) {
             LOG_IN("directory: %s", directory_.c_str());
             directory_ = directory;
             current_fd_index_ = 0;
@@ -47,7 +53,25 @@ namespace prakashq {
             msg_counter_ = 0;
             max_file_size_ = 2000000000;
             file_fds_.reserve(10);
+            
         }
+        /**
+         * init
+         * @return 
+         */
+         bool init() {
+             LOG_IN("");
+             LOG_RET_TRUE("success");
+         }
+         
+         /**
+         * run
+         * @return 
+         */
+         bool run() {
+             LOG_IN("");
+             LOG_RET_TRUE("success");
+         }
 
         /**
          * Destructor
@@ -105,7 +129,7 @@ namespace prakashq {
             LOG_IN("buffer: %p, size_of_buffer :%u, offset:%lld, ntohl: %d",
                     buffer, size_of_buffer, offset, ntohl);
 
-            for (int i = 0; i < file_fds_.size(); ++i) {
+            for (unsigned i = 0; i < file_fds_.size(); ++i) {
                 if (file_fds_[i]->offset_across_all_files_ < offset) {
                     continue; //offset is larger than total bytes written to this file. move to next
 
@@ -192,10 +216,10 @@ namespace prakashq {
          */
         ssize_t send_file(int fd, uint64_t offset, uint32_t size) {
             LOG_IN("fd[%d], offset[%u], size[%u]", fd, offset, size);
-            for (int i = 0; i < file_fds_.size(); ++i) {
-                LOG_TRACE("i[%d], offset[%u]", i, offset);
+            for (unsigned i = 0; i < file_fds_.size(); ++i) {
+                LOG_DEBUG("i[%d], offset[%u]", i, offset);
                 if (file_fds_[i]->offset_across_all_files_ < offset) {
-                    LOG_TRACE("Skipping the fd index [%d]", i);
+                    LOG_DEBUG("Skipping the fd index [%d]", i);
                     continue; //offset is larger than total bytes written to this file. move to next
                 }
                 ssize_t bytes_read = file_fds_[i]->send_file(fd, offset, size);
@@ -210,8 +234,14 @@ namespace prakashq {
         }
         
         ssize_t read_msg(std::string& message) {
-             LOG_IN("");
+             LOG_IN("message [%s]", message.c_str());
            throw std::runtime_error("connection_file::read_msg():not implemented");
+           LOG_RET("", -1);
+        }
+       
+       ssize_t write_msg(const std::string& message) {
+           LOG_IN("message [%s]", message.c_str());
+           throw std::runtime_error("connection_file::write_msg():not implemented");
            LOG_RET("", -1);
         }
         const std::string& get_current_file() const {
@@ -238,19 +268,20 @@ namespace prakashq {
         std::atomic<uint64_t> total_bytes_writen_; //FIXME: Do we need as atomic
         uint64_t msg_counter_;
 
+
         /**
          * Set and possibly create a file
          * @return 
          */
         bool set_current_file() {
             LOG_IN("");
-             LOG_TRACE("current file fd size: %u", file_fds_.size());
+             LOG_DEBUG("current file fd size: %u", file_fds_.size());
             if (file_fds_.size() == 0) {
                
                 file_details *pInfo = new file_details();
-                LOG_TRACE("Creating a file");
+                LOG_DEBUG("Creating a file");
                 if (pInfo->create_file(directory_,topic_, current_fd_index_)) {
-                    LOG_TRACE("File created successfully");
+                    LOG_DEBUG("File created successfully");
                     file_fds_.push_back(pInfo);
                     LOG_RET_TRUE("Success");
                 }else {
@@ -258,7 +289,7 @@ namespace prakashq {
                 }
                 LOG_RET_FALSE("Failed to create file");
             }
-             LOG_TRACE("File already exist.");
+             LOG_DEBUG("File already exist.");
             unsigned fd_to_use = total_bytes_writen_ / max_file_size_;
             LOG_INFO("fd_to_use: %d, current_fd_index_:% u ", fd_to_use, current_fd_index_);
             if (fd_to_use > current_fd_index_) {

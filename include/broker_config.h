@@ -9,10 +9,11 @@
 #define	BROKER_CONFIG_H
 
 #include "utils.h"
+#include "connection.h"
 //#include "broker.h"
 
 
-namespace prakashq {
+namespace lightq {
 
     class connection;
     //class broker_config
@@ -21,8 +22,6 @@ namespace prakashq {
         enum broker_type {
             broker_queue,
             broker_file,
-            broker_queue_file,
-            broker_file_queue,
             broker_direct,
         };
         
@@ -30,19 +29,22 @@ namespace prakashq {
         broker_type broker_type_;
         std::string producer_bind_uri_;
         connection::stream_type producer_stream_type_;
+        connection::socket_connect_type producer_socket_connect_type_;
         std::string consumer_bind_uri_;
         connection::stream_type consumer_stream_type_;
+        connection::socket_connect_type consumer_socket_connect_type_;
         uint32_t default_queue_size_ = 1024*1024*5;
         uint32_t max_message_size = 128 * 1048; // make it configurable
         std::string output_directory_ = "/tmp";
         std::string bind_interface = "tcp://*";
+        
         
         /**
          * to string
          * @return 
          */
         std::string to_string() {
-            char buffer[1024];
+           
             std::string str = utils::format_str( "id: %s, broker_type: %d, producer_bind_uri: %s, "
                 "producer_stream_type: %d, consumer_bind_uri: %s, consumer_stream_type: %d, "
                 "default_queue_size_: %u, max_message_size: %u, output_directory: %s", 
@@ -51,7 +53,7 @@ namespace prakashq {
                     output_directory_.c_str());
             
            // std::string str (buffer, strlen(buffer));
-            LOG_TRACE("config.to_string(): %s", str.c_str());
+            LOG_DEBUG("config.to_string(): %s", str.c_str());
             return std::move(str);
             
         }

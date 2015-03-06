@@ -14,39 +14,40 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include "thirdparty/log.hpp"
+#include "log.h"
 #include "connection.h"
 #include "utils.h"
 #include "broker_config.h"
-namespace prakashq {
+namespace lightq {
 
     class connection_socket : public connection {
     public:
         //read fd call back
         typedef int (*process_fd_callback)(int fd);
-        //bind type
-
-        enum bind_type {
-            socket_bind,
-            socket_connect,
-        };
+       
         //constuctor
-
         connection_socket(const std::string& topic,
-                const std::string& uri, endpoint_type conn_type, process_fd_callback pcallback, bool non_blocking = true) :
-        connection(topic, uri, connection::stream_type::stream_socket, conn_type) {
+                const std::string& uri, 
+                endpoint_type endpoint_type, 
+                connection::socket_connect_type socket_connect_type=connection::bind_socket,
+                bool non_blocking=true) :
+                connection(topic, uri, connection::stream_socket,
+                endpoint_type, 
+                socket_connect_type,
+                non_blocking) {
 
-            LOG_IN("topic: %s, uri: %s, endpoint_type: %d", topic.c_str(), uri.c_str(), conn_type);
+            LOG_IN("topic: %s, uri: %s, endpoint_type: %d", topic.c_str(), uri.c_str(), endpoint_type);
             socket_ = -1;
             listen_fd_ = -1;
-            non_blocking_ = non_blocking;
             stop_ = false;
-            process_fd_callback_ = pcallback;
+        //    process_fd_callback_ = pcallback;
             current_write_offset_ = 0;
             current_fd_index_ = 0;
             LOG_OUT("");
         }
-
+        /**
+         * destructor
+         */
         ~connection_socket() {
             LOG_IN("");
             if (bind_thread_id_.joinable()) {
@@ -59,11 +60,10 @@ namespace prakashq {
         }
 
         //init
-
-        bool init(bind_type btype = bind_type::socket_bind) {
+        bool init() {
             LOG_IN("");
             bool result = false;
-            if (btype == bind_type::socket_bind) {
+            if (socket_connect_type_ == socket_connect_type::bind_socket) {
                 result = init_server();
             } else {
                 result = init_client();
@@ -81,7 +81,6 @@ namespace prakashq {
          * init client
          * @param remote_host
          * @param port
-         * @param non_blocking
          * @return 
          */
         bool init_client() {
@@ -89,7 +88,7 @@ namespace prakashq {
                 LOG_ERROR("Failed to get the host and port from resource_uri_: %s", resource_uri_.c_str());
                 LOG_RET_FALSE("failed");
             }
-            struct sockaddr_in servaddr, cliaddr;
+            struct sockaddr_in servaddr;
             socket_ = socket(AF_INET, SOCK_STREAM, 0);
 
             bzero(&servaddr, sizeof (servaddr));
@@ -106,7 +105,7 @@ namespace prakashq {
                  LOG_ERROR("Failed : ioctl FIONBIO  on socket connected to %s:%d. Err: %d, ErrDesc: %s", 
                                     host_.c_str(), port_, errno, strerror(errno));
             }else {
-                LOG_TRACE("Successfully set non-block to socket : %d", socket_);
+                LOG_DEBUG("Successfully set non-block to socket : %d", socket_);
             }
            
             std::string remote_host;
@@ -128,7 +127,7 @@ namespace prakashq {
                 LOG_RET_FALSE("failed");
             }
             // boost::replace_all(host_, "*", "127.0.0.1");
-            LOG_TRACE("Binding to host[%s], Port[%d]", host_.c_str(), port_);
+            LOG_DEBUG("Binding to host[%s], Port[%d]", host_.c_str(), port_);
             
             struct sockaddr_in serv_addr;
             listen_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -160,7 +159,7 @@ namespace prakashq {
         bool run() {
 
             bind_thread_id_ = std::thread([&] {
-                if (connection_type_ == endpoint_type::conn_broker) {
+                if (endpoint_type_ == endpoint_type::conn_broker) {
                     run_broker_loop();
                 } else {
                     while (!stop_) {
@@ -193,7 +192,7 @@ namespace prakashq {
          * @return 
          */
         bool run_broker_loop() {
-            long on = 0L;
+            
             fd_set active_fd_set, read_fd_set;
             struct sockaddr_in client_addr;
             FD_ZERO(&active_fd_set);
@@ -204,7 +203,7 @@ namespace prakashq {
                     LOG_ERROR("Failed to select on read fd");
                     LOG_RET_FALSE("");
                 }
-                for (unsigned i = 0; i < FD_SETSIZE; ++i) {
+                for (int i = 0; i < FD_SETSIZE; ++i) {
 
                     if (FD_ISSET(i, &read_fd_set)) {
                         if (i == listen_fd_) {
@@ -219,7 +218,7 @@ namespace prakashq {
 //                                LOG_ERROR("Failed : ioctl FIONBIO  on socket connected to %s:%d. Err: %d, ErrDesc: %s", 
 //                                    host_.c_str(), port_, errno, strerror(errno));
 //                            }else {
-//                                LOG_TRACE("Successfully set non-block to socket : %d", socket_);
+//                                LOG_DEBUG("Successfully set non-block to socket : %d", socket_);
 //                            }
                             std::string remote_host;
                             uint32_t remote_port;
@@ -240,6 +239,7 @@ namespace prakashq {
                 }
 
             }
+             LOG_RET_TRUE("loop exit");
         }
         
         /**
@@ -255,7 +255,7 @@ namespace prakashq {
                   current_fd_index_ = 0;
             }
             int fd = fds_[current_fd_index_++];
-            LOG_TRACE("returning fd: %d", fd);
+            LOG_DEBUG("returning fd: %d", fd);
             LOG_RET("fd: %d", fd);
         }
         
@@ -277,9 +277,9 @@ namespace prakashq {
          * @param message
          * @return 
          */
-        ssize_t write(const std::string& message) {
+        ssize_t write_msg(const std::string& message) {
             LOG_IN("message:%s", message.c_str());
-            if (connection_type_ != endpoint_type::conn_broker) {
+            if (endpoint_type_ != endpoint_type::conn_broker) {
                 while (fds_.size() > 0) {
 
                     if (current_fd_index_ >= fds_.size()) {
@@ -315,7 +315,9 @@ namespace prakashq {
         }
 
         //read
-
+        ssize_t read_msg(std::string& message) {
+            return read_msg(message, false);
+        }
         ssize_t read_msg(std::string& message, bool ntohl = false) {
           //  LOG_IN("");
             ssize_t result = -1;
@@ -324,14 +326,14 @@ namespace prakashq {
                 if (current_fd_index_ >= fds_.size()) {
                     current_fd_index_ = 0;
                 }
-                if (connection_type_ != endpoint_type::conn_broker) {
+                if (endpoint_type_ != endpoint_type::conn_broker) {
                     ssize_t result = utils::read_size(fds_[current_fd_index_], ntohl);
                     if (result < 0) {
                         LOG_ERROR("Failed to write payload size to socket :%d", fds_[current_fd_index_]);
                         remove_fd(current_fd_index_);
                         continue;
                     } else if (result == 0) {
-                        LOG_TRACE("no data available to read :%d", fds_[current_fd_index_]);
+                        LOG_DEBUG("no data available to read :%d", fds_[current_fd_index_]);
                         ++current_fd_index_;
                         continue;
                     }
@@ -364,7 +366,7 @@ namespace prakashq {
         
         uint32_t get_write_offset() {
             LOG_IN("");
-            LOG_TRACE("current_write_offset_[%u]", current_write_offset_);
+            LOG_DEBUG("current_write_offset_[%u]", current_write_offset_);
             LOG_RET("", current_write_offset_);
         }
         void set_write_offset(uint32_t offset) {
@@ -434,7 +436,7 @@ namespace prakashq {
                 inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
             }
             host = ipstr;
-            LOG_TRACE("Remote address: IP: %s,  Port: %u", host.c_str(), port);
+            LOG_DEBUG("Remote address: IP: %s,  Port: %u", host.c_str(), port);
             LOG_RET_TRUE("");
         }
 
@@ -446,7 +448,6 @@ namespace prakashq {
         int listen_fd_;
         std::string host_;
         uint32_t port_;
-        bool non_blocking_;
         std::thread bind_thread_id_;
         bool stop_;
         std::vector<int> fds_;

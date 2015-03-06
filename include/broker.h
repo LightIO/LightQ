@@ -18,7 +18,7 @@
 #include "consumer.h"
 
 
-namespace prakashq {
+namespace lightq {
     
     //broker
     class broker {
@@ -29,7 +29,7 @@ namespace prakashq {
         * constructor
         * @param config
         */
-        broker(broker_config& config) : storage_(config), config_(config){
+        broker(broker_config& config) : config_(config), storage_(config){
 
             LOG_IN("broker_config: %s", config.to_string().c_str());
             stop_ = false;
@@ -55,7 +55,8 @@ namespace prakashq {
         bool init() {
             LOG_IN("");
             
-            storage_.init(config_);        
+            storage_.init(config_);  
+            
             //initialize producer
             p_producer_ = new producer(&storage_, config_);
             if(!p_producer_->init()) {
@@ -66,6 +67,7 @@ namespace prakashq {
             if(!p_consumer_->init()) {
                LOG_RET_FALSE("Failed to initialize consumer"); 
             }
+            storage_.set_consumer_socket(p_consumer_->get_consumer_socket());
                     
             LOG_RET_TRUE("success");
         }

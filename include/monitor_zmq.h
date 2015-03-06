@@ -10,9 +10,9 @@
 #include <sstream>
 #include "thirdparty/readerwriterqueue.h"
 #include "thirdparty/zmq.hpp"
-#include "thirdparty/log.hpp"
+#include "log.h"
 
-namespace prakashq {
+namespace lightq {
     //monitor event
     //monitor event
     class monitor_event {

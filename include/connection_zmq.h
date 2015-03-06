@@ -9,7 +9,7 @@
 #define	CONNECTION_ZMQ_H
 #include <thread>
 #include "thirdparty/zhelpers.hpp"
-#include "thirdparty/log.hpp"
+#include "log.h"
 
 #include "connection.h"
 #include "monitor_zmq.h"
@@ -17,14 +17,14 @@
 
 #define ZMQ_IOTHREADS 4
 
-namespace prakashq {
+namespace lightq {
 
     //zmq connection type
 
     class connection_zmq : public connection {
     public:
 
-        enum connection_type {
+        enum zmq_socket_type {
             zmq_pair,
             zmq_pub,
             zmq_sub,
@@ -39,20 +39,26 @@ namespace prakashq {
             zmq_stream
         };
 
-        enum bind_type {
-            zmq_bind,
-            zmq_connect,
-            zmq_default
-        };
+
         //constuctor
 
         connection_zmq(const std::string& topic,
-                const std::string& uri, endpoint_type conn_type) :
-
-        connection(topic, uri, connection::stream_type::stream_zmq, conn_type) {
-            LOG_IN("");
+                const std::string& uri,
+                endpoint_type ep_type,
+                zmq_socket_type zmq_type,
+                connection::socket_connect_type socket_connect = connection::bind_socket,
+                bool non_blocking = true,
+                bool monitor_enabled = false) :
+        connection(topic, uri,
+        connection::stream_type::stream_zmq,
+        ep_type,
+        socket_connect,
+        non_blocking) {
+            LOG_IN("zmq_type[%d]", zmq_type);
+            zmq_socket_type_ = zmq_type;
             fd_ = -1;
             p_socket_ = NULL;
+            monitor_enabled_ = monitor_enabled;
             LOG_OUT("");
         }
         //destructor
@@ -60,39 +66,40 @@ namespace prakashq {
         ~connection_zmq() {
             LOG_IN("");
             try {
-                LOG_TRACE("Stopping monitoring...");
+                LOG_DEBUG("Stopping monitoring...");
                 monitor_.abort();
 
             } catch (std::exception& ex) {
                 LOG_ERROR("Exception thrown: %s", ex.what());
             }
-            
-            if(monitor_thread_.joinable()) {
-                LOG_TRACE("Join monitoring thread");
+
+            if (monitor_thread_.joinable()) {
+                LOG_DEBUG("Join monitoring thread");
                 monitor_thread_.join();
             }
-            
+
             if (p_socket_) {
-                LOG_TRACE("Delete p_socket");
+                LOG_DEBUG("Delete p_socket");
                 delete p_socket_;
                 p_socket_ = NULL;
             }
             LOG_OUT("");
         }
 
+        /**
+         * init
+         * @param zmq_type
+         * @param monitor_enabled
+         * @return 
+         */
+        bool init() {
+            LOG_IN("");
 
-        //init
-
-        bool init(connection_type zmq_type, bool monitor_enabled = false, bind_type bindtype = bind_type::zmq_default) {
-            LOG_IN("context:%p, zmq_connection_type:%d, zmq_bind_type:%d", &context, zmq_type, bindtype);
-            connection_type_ = zmq_type;
-            monitor_enabled_ = monitor_enabled;
+           
             try {
                 p_socket_ = new zmq::socket_t(context(), get_zmq_connect_type());
 
-
-
-                if (bindtype == bind_type::zmq_default || bindtype == bind_type::zmq_bind) {
+                if (socket_connect_type_ == connection::bind_socket) {
                     LOG_INFO("Binding to %s", resource_uri_.c_str());
                     if (monitor_enabled_) {
                         LOG_INFO("Start monitoring..");
@@ -101,7 +108,7 @@ namespace prakashq {
                         monitor_uri_.append("_");
                         monitor_uri_.append(std::to_string(fd_));
                         monitor_uri_.append("_");
-                        monitor_uri_.append(std::to_string(connection_type_));
+                        monitor_uri_.append(std::to_string(zmq_socket_type_));
                         start_monitoring();
                     }
                     p_socket_->bind(resource_uri_.c_str());
@@ -112,7 +119,7 @@ namespace prakashq {
                 }
                 size_t fdsize = sizeof (fd_);
                 p_socket_->getsockopt(ZMQ_FD, &fd_, &fdsize);
-                LOG_TRACE("ZMQ_FD value: %d", fd_);
+                LOG_DEBUG("ZMQ_FD value: %d", fd_);
 
 
 
@@ -123,13 +130,22 @@ namespace prakashq {
             }
             LOG_RET_TRUE("");
         }
+        
+        /**
+         * 
+         * @return 
+         */
+        bool run() {
+            LOG_IN("")
+            LOG_RET_TRUE("dummy");
+        }
 
         /**
          * write
          * @param message
          * @return 
          */
-        ssize_t write(const std::string& message) {
+        ssize_t write_msg(const std::string& message) {
             LOG_IN("message:%s", message.c_str());
             try {
                 if (s_send(*p_socket_, message)) {
@@ -144,6 +160,7 @@ namespace prakashq {
                 sprintf(buffer, "Exception: %s, error number:%d", ex.what(), ex.num());
                 LOG_RET(buffer, -1);
             }
+            LOG_RET("failed", -1);
         }
 
         /**
@@ -154,14 +171,18 @@ namespace prakashq {
          */
         ssize_t write(const std::string& message, const std::string& dealer_id) {
             LOG_IN("message:%s, dealer_id:%s", message.c_str(), dealer_id.c_str());
-            if (connection_type_ != ZMQ_ROUTER) {
+            if (zmq_socket_type_ != ZMQ_ROUTER) {
                 LOG_RET("Invalid method call. This must be only called for ZMQ_ROUTER connection", -1);
             }
             p_socket_->send(dealer_id.c_str(), dealer_id.length(), ZMQ_SNDMORE);
-            LOG_RET("", write(message));
+            LOG_RET("", write_msg(message));
         }
-        //read
 
+        /**
+         * read message
+         * @param message
+         * @return 
+         */
         ssize_t read_msg(std::string& message) {
             LOG_IN("message: %s", message.c_str());
             try {
@@ -171,7 +192,7 @@ namespace prakashq {
                 //                if(!p_socket_->recv(&zmq_msg, 0)) {
                 //                    LOG_RET("Failed to read. try again", 0)
                 //                }
-                LOG_TRACE("Received: size %d", message.size());
+                LOG_DEBUG("Received: size %d", message.size());
                 message.assign(static_cast<const char*> (message.data()), message.size());
                 total_bytes_read_ += message.length();
                 ++total_msg_read_;
@@ -208,44 +229,48 @@ namespace prakashq {
 
     private:
 
+        /**
+         * get zmw connect type
+         * @return 
+         */
         int get_zmq_connect_type() {
             LOG_IN("");
-            switch (connection_type_) {
-                case connection_type::zmq_pub:
+            switch (zmq_socket_type_) {
+                case zmq_socket_type::zmq_pub:
                 {
                     LOG_RET("ZMQ_PUB", ZMQ_PUB);
                 }
-                case connection_type::zmq_sub:
+                case zmq_socket_type::zmq_sub:
                 {
                     LOG_RET("ZMQ_SUB", ZMQ_SUB);
                 }
-                case connection_type::zmq_pull:
+                case zmq_socket_type::zmq_pull:
                 {
                     LOG_RET("ZMQ_PULL", ZMQ_PULL);
                 }
-                case connection_type::zmq_push:
+                case zmq_socket_type::zmq_push:
                 {
                     LOG_RET("ZMQ_PUSH", ZMQ_PUSH);
                 }
-                case connection_type::zmq_router:
+                case zmq_socket_type::zmq_router:
                 {
                     LOG_RET("ZMQ_ROUTER", ZMQ_ROUTER);
                 }
-                case connection_type::zmq_dealer:
+                case zmq_socket_type::zmq_dealer:
                 {
                     LOG_RET("ZMQ_DEALER", ZMQ_DEALER);
                 }
-                case connection_type::zmq_req:
+                case zmq_socket_type::zmq_req:
                 {
                     LOG_RET("ZMQ_REQ", ZMQ_REQ);
                 }
-                case connection_type::zmq_rep:
+                case zmq_socket_type::zmq_rep:
                 {
                     LOG_RET("ZMQ_REP", ZMQ_REP);
                 }
                 default:
                 {
-                    LOG_ERROR(utils::format_str("Unsupported connection type:%d", connection_type_).c_str());
+                    LOG_ERROR(utils::format_str("Unsupported connection type:%d", zmq_socket_type_).c_str());
                     LOG_RET("", -1);
                 }
             }
@@ -282,7 +307,7 @@ namespace prakashq {
         }
 
 
-        connection_type connection_type_;
+        zmq_socket_type zmq_socket_type_;
         zmq::socket_t* p_socket_;
 
         uint64_t total_msg_written_;

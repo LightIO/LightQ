@@ -35,7 +35,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/log.o \
 	${OBJECTDIR}/main.o
 
 
@@ -62,11 +61,6 @@ LDLIBSOPTIONS=-L. -L/opt/zeromq/lib -L. -L/usr/local/opt/zlib/lib
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz
-
-${OBJECTDIR}/log.o: log.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iinclude/thirdparty -I/opt/zeromq/include -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/log.o log.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}

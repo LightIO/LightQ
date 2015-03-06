@@ -12,7 +12,7 @@
 #include "broker_storage.h"
 #include "connection_socket.h"
 
-namespace prakashq {
+namespace lightq {
     class consumer {
     public:
         /**
@@ -47,9 +47,14 @@ namespace prakashq {
         bool init() {
             LOG_IN("");
             if (config_.consumer_stream_type_ == connection::stream_zmq) {
-                p_consumer_socket = new connection_zmq(config_.id_, config_.consumer_bind_uri_, consumer_endpoint_type_);
+                p_consumer_socket = new connection_zmq(config_.id_, config_.consumer_bind_uri_, 
+                        consumer_endpoint_type_, 
+                        connection_zmq::zmq_push,
+                        connection::bind_socket,
+                        true,
+                        false);
                 
-                 if (!((connection_zmq*)p_consumer_socket)->init(connection_zmq::zmq_push, false, connection_zmq::zmq_bind)) {
+                 if (!p_consumer_socket->init()) {
 
                     LOG_RET_FALSE(utils::format_str("Failed to initialize broker: %s, consumer_bind_uri: %s",
                             config_.id_.c_str(), config_.consumer_bind_uri_.c_str()).c_str());
@@ -57,14 +62,19 @@ namespace prakashq {
                 }
             }else if(config_.consumer_stream_type_ == connection::stream_socket) {
                 
-                p_consumer_socket = new connection_socket(config_.id_, config_.consumer_bind_uri_, consumer_endpoint_type_, &process_fds);
-                if (!((connection_socket*)p_consumer_socket)->init()) {
+                p_consumer_socket = new connection_socket(config_.id_, 
+                        config_.consumer_bind_uri_, 
+                        consumer_endpoint_type_,
+                        connection::bind_socket,
+                        true);
+               
+                if (!p_consumer_socket->init()) {
 
                     LOG_RET_FALSE(utils::format_str("Failed to initialize broker: %s, consumer_bind_uri: %s",
                             config_.id_.c_str(), config_.consumer_bind_uri_.c_str()).c_str());
 
                 }else {
-                    if(!((connection_socket*)p_consumer_socket)->run()) {
+                    if(!p_consumer_socket->run()) {
                          LOG_RET_FALSE(utils::format_str("Failed to run consumer broker: %s, consumer_bind_uri: %s",
                             config_.id_.c_str(), config_.consumer_bind_uri_.c_str()).c_str());
                     }
@@ -120,9 +130,7 @@ namespace prakashq {
                     
                         result = p_storage_->file_to_consumer(use_send_file, p_consumer_socket);
                     
-                    } else if (config_.broker_type_ == broker_config::broker_queue ||  
-                        config_.broker_type_ == broker_config::broker_queue_file || 
-                         config_.broker_type_ == broker_config::broker_file_queue) {
+                    } else if (config_.broker_type_ == broker_config::broker_queue ) {
                         result = p_storage_->queue_to_consumer(p_consumer_socket);
                     }
                 }
@@ -133,13 +141,22 @@ namespace prakashq {
             }
             LOG_OUT("");
         }
+        
+        /**
+         * get_consumer_socket
+         * @return 
+         */
+        connection* get_consumer_socket() {
+            return p_consumer_socket;
+        }
     private:
+        broker_storage *p_storage_;
         broker_config config_;
         connection::endpoint_type consumer_endpoint_type_;
         connection *p_consumer_socket;
         bool stop_;
         std::thread consumer_tid_;
-        broker_storage *p_storage_;
+       
     };
 }
 

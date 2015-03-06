@@ -35,7 +35,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/log.o \
 	${OBJECTDIR}/main.o
 
 
@@ -43,8 +42,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto
-CXXFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto
+CCFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra
+CXXFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -62,11 +61,6 @@ LDLIBSOPTIONS=-L. -L/opt/zeromq/lib -L/usr/local/opt/zlib/lib
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz
-
-${OBJECTDIR}/log.o: log.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O3 -Iinclude -Iinclude/thirdparty -I/opt/zeromq/include -I/usr/local/opt/zlib/include -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/log.o log.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}

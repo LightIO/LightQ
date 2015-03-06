@@ -7,13 +7,13 @@
 
 #ifndef PRODUCER_H
 #define	PRODUCER_H
-#include "thirdparty/log.hpp"
+#include "log.h"
 #include "connection.h"
 #include "broker_config.h"
 //#include "broker.h"
 #include "broker_storage.h"
 #include "connection_zmq.h"
-namespace prakashq {
+namespace lightq {
     //class producer
  
     class producer {
@@ -54,12 +54,17 @@ namespace prakashq {
         bool init() {
             LOG_IN("");
             if (config_.producer_stream_type_ == connection::stream_type::stream_zmq) {
-                p_producer_socket = new connection_zmq(config_.id_, config_.producer_bind_uri_, producer_endpoint_type_);           
-                if (!((connection_zmq*)p_producer_socket)->init(connection_zmq::zmq_pull, false, connection_zmq::zmq_bind)) {
+                p_producer_socket = new connection_zmq(config_.id_, 
+                        config_.producer_bind_uri_, 
+                        connection::endpoint_type::conn_publisher, 
+                        connection_zmq::zmq_pull,
+                        config_.producer_socket_connect_type_,
+                        true, false);           
+               // connection_zmq* p_zmq_producer = (connection_zmq*)p_producer_socket;
+                if (!p_producer_socket->init()) {
 
                     LOG_RET_FALSE(utils::format_str("Failed to initialize broker: %s, producer_bind_uri: %s",
                             config_.id_.c_str(), config_.producer_bind_uri_.c_str()).c_str());
-
                 }
             } else {
                 throw std::runtime_error("producer::init():Not implemented");
@@ -79,6 +84,10 @@ namespace prakashq {
             LOG_RET_TRUE("");
         }
 
+        /**
+         * process producers
+         * @return 
+         */
         bool process_producers() {
             LOG_IN("");
             std::string message;
@@ -91,7 +100,7 @@ namespace prakashq {
                             config_.id_.c_str(), config_.producer_bind_uri_.c_str());
                     LOG_RET_FALSE("failure");
                 }
-                LOG_TRACE("Read message with size: %d", bytes_read);
+                LOG_DEBUG("Read message with size: %d", bytes_read);
                 //if bytes read zero, continue
                 if (bytes_read == 0) continue;
                 bool write_message_size = true;
@@ -108,12 +117,13 @@ namespace prakashq {
             LOG_RET_TRUE("done");
         }
     private:
+         broker_storage *p_storage_;
         broker_config config_;
         connection::endpoint_type producer_endpoint_type_;
         connection *p_producer_socket;
         bool stop_;
         std::thread producer_tid_;
-        broker_storage *p_storage_;
+       
 
     };
 }

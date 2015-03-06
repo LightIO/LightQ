@@ -11,7 +11,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include "include/thirdparty/log.hpp"
+#include "include/log.h"
 #include "include/broker_manager.h"
 
 #define STRINGIFY(x) #x
@@ -23,7 +23,7 @@
 #define stringify( name ) # name
 using namespace std::chrono;
 using namespace std;
-using namespace prakashq;
+using namespace lightq;
 //namespace prakashq {
 
 
@@ -31,14 +31,19 @@ using namespace prakashq;
 
 
 void producer_client(uint64_t counter, uint32_t payload_size, bool compress=false) {
-    LOG_IN("");
-    connection_zmq admin_socket("prakashq_topic", "tcp://127.0.0.1:5000", connection::conn_publisher);
-    if (!admin_socket.init(connection_zmq::zmq_req, false, connection_zmq::bind_type::zmq_connect)) {
+    LOG_IN("producer num_messages[%lld] message_size[%u], compress[%d]", counter, payload_size, compress);
+    connection_zmq admin_socket("prakashq_topic", "tcp://127.0.0.1:5000", 
+            connection::conn_publisher, 
+            connection_zmq::zmq_req,
+            connection::connect_socket,
+            false,
+            false);
+    if (!admin_socket.init() && admin_socket.run()) {
         LOG_ERROR("Failed to initialize producer for admin connection");
         return;
     }
     sleep(2);
-    ssize_t size = admin_socket.write("LOGIN rjoshi abcd\r\n");
+    ssize_t size = admin_socket.write_msg("LOGIN rjoshi abcd\r\n");
     if (size <= 0) {
         LOG_ERROR("Producer: Failed to LOGIN ");
         return;
@@ -47,7 +52,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress=fals
     admin_socket.read_msg(response);
     LOG_INFO("Login response :%s ", response.c_str());
 
-    size = admin_socket.write("PUB test partition1\r\n");
+    size = admin_socket.write_msg("PUB test partition1\r\n");
     if (size <= 0) {
         LOG_ERROR("Producer: Failed to PUB ");
         return;
@@ -60,8 +65,12 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress=fals
         std::string uri = tokens[2];
 
         boost::replace_all(uri, "*", "127.0.0.1");
-        connection_zmq push_socket(tokens[1], uri, connection::conn_publisher);
-        if (!push_socket.init(connection_zmq::zmq_push, false, connection_zmq::zmq_connect)) {
+        connection_zmq push_socket(tokens[1], uri, connection::conn_publisher,
+                connection_zmq::zmq_push,
+                connection::connect_socket,
+                false,
+                false);
+        if (!push_socket.init()) {
             LOG_ERROR("Failed to initialize producer push connection");
             return;
         }
@@ -77,11 +86,11 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress=fals
         }
 
         for (uint64_t i = 0; i < counter; i++) {
-            push_socket.write(message);
+            push_socket.write_msg(message);
             if (i % 500000 == 0) {
                // LOG_ERROR("i= %lld", i);
                 ssize_t size = 0;
-                 size = admin_socket.write("STATS test partition1\r\n");
+                 size = admin_socket.write_msg("STATS test partition1\r\n");
                 if (size <= 0) {
                     LOG_ERROR("Failed to request for stats");
                     return;
@@ -89,12 +98,13 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress=fals
                 std::string response;
                 admin_socket.read_msg(response);
                 LOG_EVENT("Stats :%s ", response.c_str());
+                std::cout << "Stats : " << response << std::endl;
             }
         }
-        push_socket.write("STOP");
+        push_socket.write_msg("STOP");
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
-        push_socket.write("STOP");
-        push_socket.write("STOP");
+        push_socket.write_msg("STOP");
+        push_socket.write_msg("STOP");
         
         
 
@@ -108,7 +118,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress=fals
         
         while(true) {
             ssize_t size = 0;
-              size = admin_socket.write("STATS test partition1\r\n");
+              size = admin_socket.write_msg("STATS test partition1\r\n");
                 if (size <= 0) {
                     LOG_ERROR("Failed to request for stats");
                     return;
@@ -126,14 +136,19 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress=fals
 }
 
 void consumer_client(const std::string& broker_type, const std::string& socket_type) {
-    LOG_IN("");
-    connection_zmq admin_socket("prakashq_topic", "tcp://127.0.0.1:5000", connection::conn_consumer);
-    if (!admin_socket.init(connection_zmq::zmq_req, false, connection_zmq::zmq_connect)) {
+    LOG_IN("consumer broker_type[%s] socket_type[%s]", broker_type.c_str(), socket_type.c_str());
+    connection_zmq admin_socket("prakashq_topic", "tcp://127.0.0.1:5000", 
+            connection::conn_consumer,
+            connection_zmq::zmq_req,
+            connection::connect_socket,
+            false,
+            false);
+    if (!admin_socket.init()) {
         LOG_ERROR("Failed to initialize producer for admin connection");
         return;
     }
     sleep(2);
-    ssize_t size = admin_socket.write("LOGIN rjoshi abcd\r\n");
+    ssize_t size = admin_socket.write_msg("LOGIN rjoshi abcd\r\n");
     if (size <= 0) {
         LOG_ERROR("Consumer: Failed to LOGIN ");
         return;
@@ -148,7 +163,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
     sub_cmd.append(socket_type);
     sub_cmd.append("\r\n");
 
-    size = admin_socket.write(sub_cmd);
+    size = admin_socket.write_msg(sub_cmd);
     if (size <= 0) {
         LOG_ERROR("Consumer: Failed to SUB ");
         return;
@@ -163,15 +178,16 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         boost::replace_all(uri, "*", "127.0.0.1");
         connection *p_pull_socket = NULL;
         if(socket_type == "socket") {
-            p_pull_socket  =  new  connection_socket(tokens[1], uri, connection::conn_publisher, NULL);
-            if(!((connection_socket*)p_pull_socket)->init(connection_socket::socket_connect)) {
+            p_pull_socket  =  new  connection_socket(tokens[1], uri, connection::conn_publisher, connection::connect_socket, true);
+            if(!((connection_socket*)p_pull_socket)->init()) {
                 LOG_ERROR("Failed to initialize consumer pull connection");
                 return;
             }
         }else {
         
-            p_pull_socket = new connection_zmq(tokens[1], uri, connection::conn_publisher);
-            if (!((connection_zmq*)p_pull_socket)->init(connection_zmq::zmq_pull, false, connection_zmq::zmq_connect)) {
+            p_pull_socket = new connection_zmq(tokens[1], uri, connection::conn_publisher,
+                    connection_zmq::zmq_pull, connection::connect_socket, false, false);
+            if (!p_pull_socket->init()) {
                 LOG_ERROR("Failed to initialize consumer pull connection");
                 return;
             }
@@ -230,16 +246,20 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
 
 void enabled_loglevel(const std::string& level) {
     LOG_EVENT("Enabling log level : %s", level.c_str());
+    log::event_logger()->set_level(spdlog::level::notice);
+    
     if (level == "trace") {
-        log::enable_trace();
+        log::logger()->set_level(spdlog::level::trace);
     } else if (level == "info") {
-        log::enable_info();
-    } else if (level == "event") {
-        log::enable_event();
+        log::logger()->set_level(spdlog::level::info);
+    } else if (level == "debug") {
+        log::logger()->set_level(spdlog::level::debug);
+    }  else if (level == "event") {
+        log::logger()->set_level(spdlog::level::notice);
     } else if (level == "warn") {
-        log::enable_warn();
+        log::logger()->set_level(spdlog::level::warn);
     } else {
-        log::enable_event();
+        log::logger()->set_level(spdlog::level::trace);
     }
 }
 
@@ -248,22 +268,23 @@ void enabled_loglevel(const std::string& level) {
  */
 int main(int argc, char** argv) {
 
-    log::init(log::log_write);
+    log::init(spdlog::level::notice);
 
-    log::enable_trace(); //enable_trace();
-    //log::enable_trace();
     std::string type;
     if (argc > 1) {
         type = argv[1];
     }
     //producer
     if (type == "producer") {
-
+        if(argc < 2) {
+            std::cout<< "Usage:" << argv[0] << "producer num_messages[1000000] msg_size[256] log_level[event] compress[false]" << std::cout;
+            return 0;
+        }
         uint64_t counter = 1000000;
         if (argc > 2) {
             counter = boost::lexical_cast<uint64_t>(argv[2]);
         }
-        uint32_t payload_size = 100;
+        uint32_t payload_size = 256;
         if (argc > 3) {
             payload_size = boost::lexical_cast<uint64_t>(argv[3]);
         }
@@ -281,6 +302,10 @@ int main(int argc, char** argv) {
 
 
     } else if (type == "consumer") {
+        if(argc < 2) {
+            std::cout<< "Usage:" << argv[0] << " consumer broker_type[queue/file] socket_type[zmq/socket] [log_level]" << std::cout;
+            return 0;
+        }
         std::string broker_type = "queue";
         std::string socket_type = "zmq";
         if (argc > 2) {
@@ -294,6 +319,7 @@ int main(int argc, char** argv) {
         }
         consumer_client(broker_type, socket_type);
     } else {
+        
         if (argc > 1) {
             enabled_loglevel(argv[1]);
         }

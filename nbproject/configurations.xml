@@ -14,6 +14,7 @@
       <itemPath>include/connection_zmq.h</itemPath>
       <itemPath>include/consumer.h</itemPath>
       <itemPath>include/file_details.h</itemPath>
+      <itemPath>include/log.h</itemPath>
       <itemPath>include/monitor_zmq.h</itemPath>
       <itemPath>include/producer.h</itemPath>
       <itemPath>include/utils.h</itemPath>
@@ -25,7 +26,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>log.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -89,13 +89,13 @@
       </item>
       <item path="include/file_details.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="include/log.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/monitor_zmq.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/producer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/utils.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="log.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -121,7 +121,7 @@
             <pElem>/opt/zeromq/include</pElem>
             <pElem>/usr/local/opt/zlib/include</pElem>
           </incDir>
-          <commandLine>-m64 -O3 -DNDEBUG -std=c++11 -flto</commandLine>
+          <commandLine>-m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -158,13 +158,13 @@
       </item>
       <item path="include/file_details.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="include/log.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/monitor_zmq.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/producer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/utils.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="log.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>

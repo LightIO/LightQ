@@ -16,7 +16,7 @@
 #endif
 #include "utils.h"
 
-namespace prakashq {
+namespace lightq {
     //class connection info
     class file_details {
         friend class connection_file;
@@ -81,19 +81,19 @@ namespace prakashq {
          */
         ssize_t send_file(int socket, uint64_t offset, uint32_t size) {
             LOG_IN("socket[%d], offset[%lld],  size[%u]", socket, offset, size);
-            LOG_TRACE("Current file offset[ %lld]", offset_);
+            LOG_DEBUG("Current file offset[ %lld]", offset_);
             if(size + offset > offset_) {
                 size = offset_ - offset;
-                LOG_TRACE("offset [ %lld] + size[%lld] > offset_[%lld]. Setting size as offset_ - offset[%lld] ",
+                LOG_DEBUG("offset [ %lld] + size[%lld] > offset_[%lld]. Setting size as offset_ - offset[%lld] ",
                         offset, size, offset_, size);
             }
             if(size <= 0) {
-                LOG_TRACE("size to read is zero. returning");
+                LOG_DEBUG("size to read is zero. returning");
                 LOG_RET("no read", size);
             }
  #ifdef __APPLE__
             off_t size_offset = size;
-            LOG_TRACE("Reading %lld  bytes from offset[%lld]", size, offset);
+            LOG_DEBUG("Reading %lld  bytes from offset[%lld]", size, offset);
            ssize_t result =  sendfile(fd_, socket, offset, &size_offset, NULL, 0);
            if(result == 0 || result == EAGAIN) {
                LOG_RET("success", size_offset);
@@ -125,10 +125,10 @@ namespace prakashq {
             if(include_size) {
                 uint32_t size = msg.length();
                 if(include_offset) {
-                    LOG_TRACE("Write offset is true.  adding sizeof(offset_): %d", sizeof(offset_));
+                    LOG_DEBUG("Write offset is true.  adding sizeof(offset_): %d", sizeof(offset_));
                     size = size + sizeof(offset_); //sizeof(0x0);
                 }
-                LOG_TRACE("Writting payload length: %u", size);
+                LOG_DEBUG("Writting payload length: %u", size);
                 length_written = write_length(size);
                 if (length_written <= 0) {
                     LOG_RET("failed", length_written);
@@ -136,7 +136,7 @@ namespace prakashq {
                 
             }
           
-            unsigned remaning = msg.length();
+           
             size_t written_buffer = 0;
             if ((written_buffer = write_buffer(msg.c_str(), msg.length())) <= 0) {
                 LOG_RET("Error", written_buffer);
@@ -165,7 +165,7 @@ namespace prakashq {
             newfile.append("_");
             newfile.append(std::to_string(index));
             newfile.append(".txt");
-            LOG_TRACE("Creating filename :%s", newfile.c_str());
+            LOG_DEBUG("Creating filename :%s", newfile.c_str());
 #ifdef __APPLE__
             int flags = O_RDWR | O_CREAT | O_ASYNC | O_NONBLOCK;
 #else
@@ -298,12 +298,12 @@ namespace prakashq {
          */
         ssize_t read_buffer_length(char* buffer, int buf_size, uint64_t offset, bool ntohl) {
             LOG_IN("buffer: %p, buf_size: %d, offset: %lld, ntohl: %d", buffer, buf_size, offset, ntohl);
-            int result;
+            ssize_t result = 0;
             unsigned bytestoRead = sizeof (unsigned);
             unsigned bytesRead = 0;
             buffer[0]='\0';
             while (bytestoRead > 0) {
-                ssize_t result = pread(fd_, buffer + bytesRead, bytestoRead, offset);
+                 result = pread(fd_, buffer + bytesRead, bytestoRead, offset);
                 if (result < 1) {
                     LOG_ERROR("Failed to read length of the message");
                     LOG_RET("Error:", -1);
@@ -334,11 +334,11 @@ namespace prakashq {
          */
         ssize_t read_buffer(char* buffer, int buf_size, int length, uint32_t offset) {
             LOG_IN("buffer: %p, buf_size: %d, length: %d, offset: %u", buffer, buf_size, length, offset);
-            int result;
+            ssize_t result = 0;
             unsigned bytestoRead = length;
             unsigned bytesRead = 0;
             while (bytestoRead > 0) {
-                ssize_t result = pread(fd_, buffer + bytesRead, bytestoRead, offset);              
+                 result = pread(fd_, buffer + bytesRead, bytestoRead, offset);              
                 if (result < 1) {
                     LOG_ERROR("Failed to read  of the message");
                     LOG_RET("", -1);

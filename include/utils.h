@@ -13,9 +13,9 @@
 #include <chrono>
 #include <vector>
 
-#include "thirdparty/log.hpp"
+#include "log.h"
 using namespace std::chrono;
-namespace prakashq {
+namespace lightq {
 
     class utils {
     public:
@@ -44,9 +44,9 @@ namespace prakashq {
             std::vector<std::string> tokens;
             while (std::getline(ss, token, del)) {
                 tokens.push_back(token);
-                LOG_TRACE("Token: %s", token.c_str());
+                LOG_DEBUG("Token: %s", token.c_str());
             }
-            LOG_TRACE("Number of tokens received :%d", tokens.size());
+            LOG_DEBUG("Number of tokens received :%d", tokens.size());
             return std::move(tokens);
         }
 
@@ -69,7 +69,7 @@ namespace prakashq {
             host = tokens[1];
             boost::replace_all(host, "/", "");
 
-            LOG_TRACE("Converted %s to host: %s, port: %u", uri.c_str(), host.c_str(), port);
+            LOG_DEBUG("Converted %s to host: %s, port: %u", uri.c_str(), host.c_str(), port);
             LOG_RET_TRUE("");
 
 
@@ -147,7 +147,7 @@ namespace prakashq {
                 int res = deflate(&strm, Z_NO_FLUSH);
                 if (res != Z_OK) {
                     LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                    return false;
+                    LOG_RET_FALSE("zlib error");
                 }
                 if (strm.avail_out == 0) {
                     buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
@@ -168,12 +168,13 @@ namespace prakashq {
 
             if (deflate_res != Z_STREAM_END) {
                 LOG_ERROR("Error: %s", zlib_error_str(deflate_res).c_str());
-                return false;
+                LOG_RET_FALSE("zlib error");
             }
             buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE - strm.avail_out);
             deflateEnd(&strm);
 
             out_data.swap(buffer);
+            LOG_RET_TRUE("");
         }
 
         /**
@@ -198,7 +199,7 @@ namespace prakashq {
             int res = inflateInit(&d_stream);
             if (res != Z_OK) {
                 LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                return false;
+                 LOG_RET_FALSE("zlib error");
             }
 
             d_stream.avail_in = in_data_size;
@@ -212,7 +213,7 @@ namespace prakashq {
                 res = inflate(&d_stream, Z_NO_FLUSH);
 
                 if (res == Z_STREAM_END) {
-                    for (int i = 0; i < (10 - d_stream.avail_out); i++)
+                    for (unsigned i = 0; i < (10 - d_stream.avail_out); i++)
                         out_data.push_back(d_buffer[i]);
                     if (d_stream.avail_in == 0)
                         break;
@@ -220,19 +221,20 @@ namespace prakashq {
 
                 if (res != Z_OK) {
                     LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                    return false;
+                     LOG_RET_FALSE("zlib error");
                 }
 
 
-                for (int i = 0; i < (10 - d_stream.avail_out); i++)
+                for (unsigned i = 0; i < (10 - d_stream.avail_out); i++)
                     out_data.push_back(d_buffer[i]);
             }
             res = inflateEnd(&d_stream);
             if (res != Z_OK) {
                 LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                return false;
+                 LOG_RET_FALSE("zlib error");
             }
 
+            LOG_RET_TRUE("success");
         }
 
         /**
