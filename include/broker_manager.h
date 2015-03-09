@@ -32,7 +32,7 @@ namespace lightq {
           * @param user_id
           * @param password
           */
-        broker_manager(const std::string& admin_uri, const std::string& user_id="lightq", 
+        broker_manager(const std::string& admin_uri, const std::string& user_id="lightq_admin", 
                 const std::string& password="T0p$3cr31")
                 : admin_uri_(admin_uri), user_id_(user_id), password_(password){
             
@@ -82,6 +82,8 @@ namespace lightq {
             std::string message;
             message.reserve(max_read_buffer_);
             while(!stop_) {
+                LOG_TRACE("Reading incoming command request...");
+                message.clear();
                 ssize_t bytes_read = p_conn_admin_->read_msg(message);
                 if(bytes_read < 0) {
                     LOG_ERROR("Failed to read from admin connection. Need to reinitialize");
@@ -97,7 +99,7 @@ namespace lightq {
                 
                
                 bool result = process_command(message); //PERF:  Check if we need to have a seperate thread to process the command
-                LOG_DEBUG("Process Command: %d" , result);
+                LOG_DEBUG("Process Command: %s" , result?"true":"false");
 
             }
             LOG_RET_TRUE("");
@@ -121,6 +123,8 @@ namespace lightq {
                 
             }else if(strncmp(message.c_str(), CMD_SUB.c_str(), CMD_SUB.length()) == 0) {
                 result = reply_to_join_broker(message, CMD_SUB);
+            }else if(strncmp(message.c_str(), CMD_PULL.c_str(), CMD_PULL.length()) == 0) {
+                result = reply_to_join_broker(message, CMD_PULL);
             }else if(strncmp(message.c_str(), CMD_STATS.c_str(), CMD_STATS.length()) == 0) {
                 result = reply_to_stats(message);
             }else {
@@ -148,10 +152,12 @@ namespace lightq {
             if( it == brokers_.end()) {
                 return reply_invalid_cmd();
             }
-             std::string stats = utils::format_str("STATS:  TotalMessagesReceived: %u, "
-                     "TotalMessagesSent: %u,  QueueSize: %lld",
+             std::string stats = utils::format_str("STATS:  TotalMessagesReceived:%u, "
+                     "TotalMessagesSent:%u,  QueueSize:%lld, NumSubClients:%u, NumPullClients:%u",
                       it->second->get_total_msg_received(),  it->second->get_total_msg_sent(),
-                      it->second->get_queue_size());
+                      it->second->get_queue_size(),
+                      it->second->p_consumer_->get_num_pub_clients(), 
+                      it->second->p_consumer_->get_num_pull_clients());
              LOG_EVENT("Status response: %s", stats.c_str());
              return reply_cmd(stats);
              
@@ -213,27 +219,51 @@ namespace lightq {
                 }
             }
             broker_config config;
+            producer_config prod_conf;
+            consumer_config consumer_conf;
             std::map<std::string, broker*>::iterator it = brokers_.find(broker_id);
+            std::string response = "JOIN ";
+            response.append(broker_id);
+            response.append(" ");
+            LOG_TRACE("Command is %s", cmd.c_str());
             if( it == brokers_.end()) {
+                LOG_DEBUG("broker with %s not found. Creating new..", broker_id.c_str());
               //  broker_config config;
                 config.id_ = broker_id;
                 config.broker_type_ = broker_type;
-                config.producer_bind_uri_ = config.bind_interface;
-                config.producer_bind_uri_.append(":");
-                config.producer_bind_uri_.append(std::to_string(broker_config::get_next_port()));          
-                config.producer_stream_type_ = connection::stream_type::stream_zmq;
-                config.producer_socket_connect_type_ = connection::bind_socket;
-                config.consumer_bind_uri_ = config.bind_interface;
-                config.consumer_bind_uri_.append(":");
-                config.consumer_bind_uri_.append(std::to_string(broker_config::get_next_port()));
-                config.consumer_stream_type_ = stream;
-                config.consumer_socket_connect_type_ = connection::bind_socket;
+                prod_conf.id_ = broker_id;
+                prod_conf.producer_bind_uri_ = config.bind_interface;
+                prod_conf.producer_bind_uri_.append(":");
+                prod_conf.producer_bind_uri_.append(std::to_string(broker_config::get_next_port()));          
+                prod_conf.producer_stream_type_ = connection::stream_type::stream_zmq;
+                prod_conf.producer_socket_connect_type_ = connection::bind_socket;
+                
+                consumer_conf.id_ = broker_id;
+                consumer_conf.push_bind_uri_ = config.bind_interface;
+                consumer_conf.push_bind_uri_.append(":");
+                consumer_conf.push_bind_uri_.append(std::to_string(broker_config::get_next_port()));
+                consumer_conf.pub_bind_uri_ = config.bind_interface;
+                consumer_conf.pub_bind_uri_.append(":");
+                consumer_conf.pub_bind_uri_.append(std::to_string(broker_config::get_next_port()));
+                consumer_conf.stream_type_ = stream;
+                consumer_conf.socket_connect_type_ = connection::bind_socket;
             
+              
             
                 broker  *pb = new broker(config);
-                if(pb->init() && pb->run()) {
+                if(pb->init(prod_conf, consumer_conf) && pb->run()) {
                     LOG_EVENT("Broker %s started successfully", config.to_string().c_str());
                     brokers_.insert(std::pair<std::string, broker*>(broker_id, pb));
+                    if(cmd == "PUB") {
+                        response.append(prod_conf.producer_bind_uri_);
+                    }else if(cmd == "SUB") {
+                        response.append(consumer_conf.pub_bind_uri_);
+                    }else {
+                        response.append(consumer_conf.push_bind_uri_);
+                    }
+                     LOG_TRACE("Sending reply: %s", response.c_str());
+                    ssize_t result = reply_cmd(response);
+                    LOG_RET("", result);
                 }else {
                     delete pb;
                     LOG_ERROR("Failed to start broker %s", config.to_string().c_str());
@@ -243,20 +273,24 @@ namespace lightq {
                 }
             }else {
                
-                config = it->second->config_;
-                 LOG_EVENT("Reusing existing broker :%s",  config.to_string().c_str());
+                config = it->second->get_config();
+                LOG_EVENT("Reusing existing broker :%s",  config.to_string().c_str());
+                if(cmd == "PUB") {
+                        response.append(it->second->get_producer()->get_bind_uri());
+                    }else if(cmd == "SUB") {
+                        response.append(it->second->get_consumer()->get_pub_bind_uri());
+                    }else {
+                        response.append(it->second->get_consumer()->get_push_bind_uri());
+                    }
+                     LOG_TRACE("Sending reply: %s", response.c_str());
+                    ssize_t result = reply_cmd(response);
+                    LOG_RET("", result);
             }
-            std::string response = "JOIN ";
-            response.append(config.id_);
-            response.append(" ");
-            if(cmd == "PUB") {
-                response.append(config.producer_bind_uri_);
-            }else {
-                response.append(config.consumer_bind_uri_);
-                
-            }
-            ssize_t result = reply_cmd(response);
-            LOG_RET("", result);
+            ssize_t result = reply_cmd(CMD_SERVER_ERROR);
+            LOG_RET("should not come here", -1);
+           
+            
+           
            
         }
         /**
@@ -285,7 +319,7 @@ namespace lightq {
             if(!authenticate(tokens[1], tokens[2])) {
                 return reply_cmd(CMD_INVALID);
             }else {
-                reply_cmd(CMD_LOGIN_SUCCESS);
+                return reply_cmd(CMD_LOGIN_SUCCESS);
             }
             LOG_RET("shouldn't come here", -1);
             
@@ -299,8 +333,9 @@ namespace lightq {
          */
         bool authenticate(const std::string& user, const std::string& password){
             LOG_IN("user: %s, password: %s", user.c_str(), password.c_str());
-           
+            LOG_TRACE("user_id_[%s], password_[%s]", user_id_.c_str(), password_.c_str());
             if(user_id_ == user && password_ == password) {
+               
                 LOG_RET_TRUE("Login success");
             }
             LOG_RET_FALSE("Login failed");
@@ -323,14 +358,15 @@ namespace lightq {
          const std::string CMD_INVALID = "INVALID COMMAND";
          const std::string CMD_PUB = "PUB";
          const std::string CMD_SUB = "SUB";
+         const std::string CMD_PULL = "PULL";
          const std::string CMD_UNSUB = "UNSUB";
          const std::string CMD_DISCONECT = "DISCONNECT";
          const std::string CMD_PING = "PING";
          const std::string CMD_PONG = "PONG";
          const std::string CMD_LOGIN = "LOGIN";
-         const std::string CMD_UNAUTH = "UNAUTHORIZED ACCESS";
-         const std::string CMD_LOGIN_SUCCESS = "LOGIN SUCCESS";
-         const std::string CMD_SERVER_ERROR = "SERVER ERROR";
+         const std::string CMD_UNAUTH = "UNAUTHORIZED_ACCESS";
+         const std::string CMD_LOGIN_SUCCESS = "LOGIN_SUCCESS";
+         const std::string CMD_SERVER_ERROR = "SERVER_ERROR";
          const std::string CMD_STATS = "STATS";
        
 

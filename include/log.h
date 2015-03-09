@@ -88,7 +88,7 @@ namespace lightq {
              auto lightq_logger = spdlog::stdout_logger_mt("lightq_logger");
 #else
             auto lightq_logger = spdlog::rotating_logger_mt("lightq_logger", details_logfile, 1048576 * 500, 10);
-            spdlog::set_async_mode(1048576); //queue size
+           // spdlog::set_async_mode(1048576); //queue size
 #endif
             lightq_logger->set_level(level);
             
@@ -99,7 +99,7 @@ namespace lightq {
             event_logfile.append(std::to_string(pid));
             event_logfile.append(".log");
             auto lightq_event_logger = spdlog::rotating_logger_mt("lightq_event_logger", event_logfile, 1048576 * 500, 10);
-            spdlog::set_async_mode(1048576); //queue size
+            //spdlog::set_async_mode(1048576); //queue size
             lightq_event_logger->set_level(level);
             return true;
         }

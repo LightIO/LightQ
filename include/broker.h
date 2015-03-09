@@ -52,20 +52,24 @@ namespace lightq {
             LOG_OUT("");
         }
 
-        bool init() {
+        bool init(producer_config& prod_config, consumer_config& consumer_config) {
             LOG_IN("");
             
             storage_.init(config_);  
             
             //initialize producer
-            p_producer_ = new producer(&storage_, config_);
+            p_producer_ = new producer(&storage_, prod_config);
             if(!p_producer_->init()) {
                 LOG_RET_FALSE("Failed to initialize producer");
+            }else {
+                LOG_DEBUG("Producer initialized successfully");
             }
             //initialize consumer
-            p_consumer_ = new consumer(&storage_,config_);
+            p_consumer_ = new consumer(&storage_,consumer_config);
             if(!p_consumer_->init()) {
                LOG_RET_FALSE("Failed to initialize consumer"); 
+            }else {
+                LOG_DEBUG("Consumer initialized successfully");
             }
             storage_.set_consumer_socket(p_consumer_->get_consumer_socket());
                     
@@ -95,20 +99,29 @@ namespace lightq {
         }
 
         inline uint32_t get_total_msg_sent() {
-            return storage_.get_total_msg_sent();
+            return storage_.get_total_dequeued_messages();
         }
          inline uint32_t get_total_msg_received() {
-            return storage_.get_total_msg_received();
+            return storage_.get_total_enqueued_messages();
         }
          
          inline uint64_t get_queue_size() {
              return storage_.get_queue_size();
          }
 
-       
-        broker_config config_;
-    private:
+         producer * get_producer()  {
+            return p_producer_;
+        }
         
+         consumer * get_consumer()  {
+            return p_consumer_;
+        }
+         broker_config& get_config()  {
+            return config_;
+        }
+        
+    private:
+        broker_config config_;
         bool stop_;
         broker_storage storage_;
         producer *p_producer_;

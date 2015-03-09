@@ -12,15 +12,19 @@
 #include <string>
 #include <chrono>
 #include <vector>
-
 #include "log.h"
 using namespace std::chrono;
 namespace lightq {
 
     class utils {
     public:
+        
+        inline static uint32_t get_max_message_size() {
+            static uint32_t max_msg_size = 128*1024;
+            return max_msg_size;
+        }
 
-        static std::string format_str(const char * buf, ...) {
+        inline static std::string format_str(const char * buf, ...) {
             va_list args;
             va_start(args, buf);
             std::string msg = log::format_arg_list(buf, args);
@@ -88,13 +92,23 @@ namespace lightq {
             }
             return thread_id;
         }
+        /**
+         * thread id to string
+         * @param id
+         * @return 
+         */
+        static std::string thread_id_to_str(std::thread::id id) {
+            std::stringstream ss;
+            ss << id;
+            return ss.str();
+        }
 
-        static unsigned long get_currenttime_milliseconds() {
+        inline static unsigned long get_currenttime_milliseconds() {
             high_resolution_clock::time_point t1 = high_resolution_clock::now();
             return (t1.time_since_epoch() / std::chrono::milliseconds(1));
         }
 
-        static unsigned long get_currenttime_milliseconds(high_resolution_clock::time_point &t1) {
+        inline static unsigned long get_currenttime_milliseconds(high_resolution_clock::time_point &t1) {
             return (t1.time_since_epoch() / std::chrono::milliseconds(1));
         }
 
@@ -114,8 +128,9 @@ namespace lightq {
             };
             std::string str(length, 0);
             std::generate_n(str.begin(), length, randchar);
-            return str;
+            return std::move(str);
         }
+       
 
         /**
          * compress zlib data

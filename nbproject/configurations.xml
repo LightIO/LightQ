@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>include/admin_cmd.h</itemPath>
       <itemPath>include/broker.h</itemPath>
       <itemPath>include/broker_config.h</itemPath>
       <itemPath>include/broker_manager.h</itemPath>
@@ -66,9 +67,11 @@
             <pElem>.</pElem>
             <pElem>/usr/local/opt/zlib/lib</pElem>
           </linkerAddLib>
-          <commandLine>-m64 -lzmq -lz</commandLine>
+          <commandLine>-m64 -lzmq -lz -pthread</commandLine>
         </linkerTool>
       </compileType>
+      <item path="include/admin_cmd.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/broker.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/broker_config.h" ex="false" tool="3" flavor2="0">
@@ -135,9 +138,11 @@
             <pElem>/opt/zeromq/lib</pElem>
             <pElem>/usr/local/opt/zlib/lib</pElem>
           </linkerAddLib>
-          <commandLine>-m64 -lzmq -lz</commandLine>
+          <commandLine>-m64 -lzmq -lz -pthread</commandLine>
         </linkerTool>
       </compileType>
+      <item path="include/admin_cmd.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/broker.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/broker_config.h" ex="false" tool="3" flavor2="0">

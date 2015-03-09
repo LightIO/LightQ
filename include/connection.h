@@ -113,6 +113,10 @@ namespace lightq {
         inline const std::string& topic() const {
             return topic_;
         }
+        
+        inline std::string get_resource_uri_() {
+            return resource_uri_;
+        }
     protected:
         std::string resource_uri_;
         std::string topic_;

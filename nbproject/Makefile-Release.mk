@@ -60,7 +60,7 @@ LDLIBSOPTIONS=-L. -L/opt/zeromq/lib -L/usr/local/opt/zlib/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz -pthread
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}

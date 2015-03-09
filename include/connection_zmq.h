@@ -41,7 +41,6 @@ namespace lightq {
 
 
         //constuctor
-
         connection_zmq(const std::string& topic,
                 const std::string& uri,
                 endpoint_type ep_type,
@@ -62,7 +61,6 @@ namespace lightq {
             LOG_OUT("");
         }
         //destructor
-
         ~connection_zmq() {
             LOG_IN("");
             try {
@@ -95,10 +93,9 @@ namespace lightq {
         bool init() {
             LOG_IN("");
 
-           
             try {
                 p_socket_ = new zmq::socket_t(context(), get_zmq_connect_type());
-
+                
                 if (socket_connect_type_ == connection::bind_socket) {
                     LOG_INFO("Binding to %s", resource_uri_.c_str());
                     if (monitor_enabled_) {
@@ -115,6 +112,10 @@ namespace lightq {
 
                 } else {
                     LOG_INFO("Connecting to %s", resource_uri_.c_str());
+                    if(get_zmq_connect_type() == ZMQ_SUB) {
+                        p_socket_->setsockopt(ZMQ_SUBSCRIBE, topic_.c_str(), topic_.length());
+                        LOG_TRACE("Subscribing to topic[%s]", topic_.c_str());
+                     }
                     p_socket_->connect(resource_uri_.c_str());
                 }
                 size_t fdsize = sizeof (fd_);
@@ -184,9 +185,10 @@ namespace lightq {
          * @return 
          */
         ssize_t read_msg(std::string& message) {
+            message.c_str();
             LOG_IN("message: %s", message.c_str());
             try {
-
+                
                 message = s_recv(*p_socket_);
                 //                zmq::message_t zmq_msg;             
                 //                if(!p_socket_->recv(&zmq_msg, 0)) {
@@ -203,6 +205,8 @@ namespace lightq {
                 LOG_RET(buffer, -1);
             }
         }
+        
+       
 
         /**
          * Read message
@@ -225,7 +229,11 @@ namespace lightq {
             LOG_RET("Failed", -1);
         }
 
-
+        uint32_t get_num_connected_clients() {
+            return monitor_.num_clients_;
+        }
+        
+       
 
     private:
 
@@ -290,7 +298,7 @@ namespace lightq {
          */
         void start_monitoring() {
             LOG_IN("");
-            monitor_thread_ = std::thread([&]() {
+            std::thread th = std::thread([&]() {
                 LOG_IN("");
                 try {
 
@@ -298,11 +306,35 @@ namespace lightq {
 
                 } catch (zmq::error_t &ex) {
 
-                    LOG_ERROR("Exception: %s, error number:%d", ex.what(), ex.num());
+                    LOG_ERROR("zmq::error_t : %s, error number:%d", ex.what(), ex.num());
+                } catch (std::exception ex) {
+
+                    LOG_ERROR("Exception: %s", ex.what());
                 }
                 LOG_EVENT("event_monitor_stopped");
-                        LOG_OUT("");
+               
             });
+            LOG_TRACE("Swapping thread");
+            LOG_DEBUG("monitor_thread_ id[%s], th thread id[%s]",
+                    utils::thread_id_to_str(monitor_thread_.get_id()).c_str(),
+                    utils::thread_id_to_str(th.get_id()).c_str());
+            monitor_thread_.swap(th);
+           
+           // std::swap(monitor_thread_, th);
+            LOG_DEBUG("After swap: monitor_thread_ id[%s], th thread id[%s]",
+                    utils::thread_id_to_str(monitor_thread_.get_id()).c_str(),
+                    utils::thread_id_to_str(th.get_id()).c_str());
+            
+            if(th.get_id() == std::thread::id()) {
+                LOG_DEBUG("Swap is successfull");
+            }else {
+                th.detach();
+            }
+//            if (th.joinable()) {
+//                LOG_DEBUG("Join monitoring thread");
+//                th.join();
+//            }
+            LOG_OUT("");
 
         }
 

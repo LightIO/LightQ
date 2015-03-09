@@ -15,17 +15,22 @@
 #include "connection_zmq.h"
 namespace lightq {
     //class producer
- 
+    struct producer_config {
+        std::string id_;
+        std::string producer_bind_uri_;
+        connection::stream_type producer_stream_type_;
+        connection::socket_connect_type producer_socket_connect_type_;
+    };
     class producer {
     public:
 
         /**
          * constructor
          */
-        producer(broker_storage *pstorage, broker_config& config) : p_storage_(pstorage), config_(config),
+        producer(broker_storage *pstorage, producer_config& config) : p_storage_(pstorage), config_(config),
             producer_endpoint_type_(connection::endpoint_type::conn_publisher) {
             LOG_IN("broker_storage: %p, config: %s, pconnection::endpoint_type::conn_publisher",
-                    p_storage_, config_.to_string().c_str());
+                    p_storage_, config.producer_bind_uri_.c_str());
             stop_ = false;
             p_producer_socket = NULL;
             LOG_OUT("");
@@ -91,7 +96,7 @@ namespace lightq {
         bool process_producers() {
             LOG_IN("");
             std::string message;
-            message.reserve(config_.max_message_size);
+            message.reserve(128*1024); // FIXME
             while (!stop_) {
                 message.clear();
                 ssize_t bytes_read = p_producer_socket->read_msg(message);
@@ -116,9 +121,13 @@ namespace lightq {
             }
             LOG_RET_TRUE("done");
         }
+        
+        std::string get_bind_uri() {
+            return config_.producer_bind_uri_;
+        }
     private:
          broker_storage *p_storage_;
-        broker_config config_;
+        producer_config config_;
         connection::endpoint_type producer_endpoint_type_;
         connection *p_producer_socket;
         bool stop_;
