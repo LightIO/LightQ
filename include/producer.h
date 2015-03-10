@@ -125,6 +125,15 @@ namespace lightq {
         std::string get_bind_uri() {
             return config_.producer_bind_uri_;
         }
+        
+         unsigned get_num_clients() {
+            if(p_producer_socket ) {
+                connection_zmq* psocket = (connection_zmq*) p_producer_socket;
+                return psocket->get_num_connected_clients();
+            }else {
+                return 0;
+            }
+        }
     private:
          broker_storage *p_storage_;
         producer_config config_;

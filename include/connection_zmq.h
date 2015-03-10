@@ -122,14 +122,12 @@ namespace lightq {
                 p_socket_->getsockopt(ZMQ_FD, &fd_, &fdsize);
                 LOG_DEBUG("ZMQ_FD value: %d", fd_);
 
-
-
             } catch (zmq::error_t &ex) {
                 char buffer[256];
                 sprintf(buffer, "Exception: %s, error number:%d", ex.what(), ex.num());
                 LOG_RET_FALSE(buffer);
             }
-            LOG_RET_TRUE("");
+            LOG_RET_TRUE("initialized");
         }
         
         /**
@@ -149,6 +147,10 @@ namespace lightq {
         ssize_t write_msg(const std::string& message) {
             LOG_IN("message:%s", message.c_str());
             try {
+                 if(get_zmq_connect_type() == ZMQ_PUB) {
+                   s_sendmore(*p_socket_, topic_);
+                 }
+                
                 if (s_send(*p_socket_, message)) {
                     total_bytes_written_ += message.length();
                     total_msg_written_ += 1;

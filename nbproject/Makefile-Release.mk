@@ -42,8 +42,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra
-CXXFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra
+CCFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra -DPICOJSON_USE_INT64
+CXXFLAGS=-m64 -m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra -DPICOJSON_USE_INT64
 
 # Fortran Compiler Flags
 FFLAGS=

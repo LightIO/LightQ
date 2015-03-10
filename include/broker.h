@@ -33,6 +33,8 @@ namespace lightq {
 
             LOG_IN("broker_config: %s", config.to_string().c_str());
             stop_ = false;
+            p_producer_= NULL;
+            p_consumer_ = NULL;
             LOG_OUT("");
         }
 
@@ -52,18 +54,14 @@ namespace lightq {
             LOG_OUT("");
         }
 
-        bool init(producer_config& prod_config, consumer_config& consumer_config) {
+        bool init() {
             LOG_IN("");
-            
             storage_.init(config_);  
-            
-            //initialize producer
-            p_producer_ = new producer(&storage_, prod_config);
-            if(!p_producer_->init()) {
-                LOG_RET_FALSE("Failed to initialize producer");
-            }else {
-                LOG_DEBUG("Producer initialized successfully");
-            }
+            LOG_RET_TRUE("success");
+        }
+        
+        bool init_consumer(consumer_config& consumer_config) {
+            LOG_IN("");
             //initialize consumer
             p_consumer_ = new consumer(&storage_,consumer_config);
             if(!p_consumer_->init()) {
@@ -72,20 +70,31 @@ namespace lightq {
                 LOG_DEBUG("Consumer initialized successfully");
             }
             storage_.set_consumer_socket(p_consumer_->get_consumer_socket());
-                    
+            if(p_consumer_->run()) {     
+                LOG_RET_TRUE("success");
+            }else {
+                LOG_RET_FALSE("Failed to run consumer");
+           }
+        }
+        
+        bool init_producer(producer_config& prod_config) {
+            LOG_IN("");
+
+            //initialize producer
+            p_producer_ = new producer(&storage_, prod_config);
+            if(!p_producer_->init()) {
+                LOG_RET_FALSE("Failed to initialize producer");
+            }else {
+                LOG_DEBUG("Producer initialized successfully");
+            }
+           if(p_producer_->run()) {
             LOG_RET_TRUE("success");
+           }else {
+                LOG_RET_FALSE("Failed to run producer");
+           }
         }
 
-        /**
-         * run
-         * @return 
-         */
-        bool run() {
-            LOG_IN("");
-            p_producer_->run();
-            p_consumer_->run();
-            LOG_RET_TRUE("done");
-        }
+        
 
         /**
          * Stop the broker

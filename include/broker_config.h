@@ -27,6 +27,8 @@ namespace lightq {
         
         std::string id_;
         broker_type broker_type_;
+        std::string user_id_;
+         std::string password_;
        // producer_config producer_config_;
        // consumer_config consumer_config_;
         uint32_t default_queue_size_ = 1024*1024*5;

@@ -58,7 +58,7 @@
             <pElem>include/thirdparty</pElem>
             <pElem>/opt/zeromq/include</pElem>
           </incDir>
-          <commandLine>-DDEBUG -std=c++11 -flto -O0</commandLine>
+          <commandLine>-DDEBUG -std=c++11 -flto -O0 -DPICOJSON_USE_INT64</commandLine>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
@@ -124,7 +124,7 @@
             <pElem>/opt/zeromq/include</pElem>
             <pElem>/usr/local/opt/zlib/include</pElem>
           </incDir>
-          <commandLine>-m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra</commandLine>
+          <commandLine>-m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra -DPICOJSON_USE_INT64</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>

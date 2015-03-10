@@ -51,6 +51,7 @@ namespace lightq {
             stop_ = false;
             p_consumer_socket_ = NULL;
             p_consumer_pub_socket = NULL;
+            running_ = false;
             LOG_OUT("");
         }
 
@@ -144,6 +145,10 @@ namespace lightq {
          */
         bool run() {
             LOG_IN("");
+            if(running_) {
+                return running_;
+            }
+            running_ = true;
             consumer_tid_ = std::thread([&]() {
                 process_consumers();
             });
@@ -235,7 +240,7 @@ namespace lightq {
         }
         
         unsigned get_num_pub_clients() {
-            if(p_consumer_pub_socket && p_storage_->get_broker_type() == broker_config::broker_queue) {
+            if(p_consumer_pub_socket ) {
                  connection_zmq* psocket = (connection_zmq*) p_consumer_pub_socket;
                 return psocket->get_num_connected_clients();
             }else {
@@ -243,7 +248,7 @@ namespace lightq {
             }
         }
         unsigned get_num_pull_clients() {
-            if(p_consumer_socket_ && p_storage_->get_broker_type() == broker_config::broker_queue) {
+            if(p_consumer_socket_) {
                 connection_zmq* psocket = (connection_zmq*) p_consumer_socket_;
                 return psocket->get_num_connected_clients();
             }else {
@@ -258,6 +263,7 @@ namespace lightq {
         connection *p_consumer_pub_socket; //zqm only
         bool stop_;
         std::thread consumer_tid_;
+        bool running_;
 
     };
 }
