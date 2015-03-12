@@ -82,6 +82,14 @@ namespace lightq {
          * @return 
          */
         virtual ssize_t write_msg(const std::string& message) = 0;
+        
+        /**
+         * write message
+         * @param message
+         * @param length
+         * @return 
+         */
+        virtual ssize_t write_msg(const char* message, unsigned length) = 0;
 
         
         /**

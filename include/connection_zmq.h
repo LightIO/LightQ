@@ -123,7 +123,7 @@ namespace lightq {
                 LOG_DEBUG("ZMQ_FD value: %d", fd_);
 
             } catch (zmq::error_t &ex) {
-                char buffer[256];
+                char buffer[utils::max_small_msg_size];
                 sprintf(buffer, "Exception: %s, error number:%d", ex.what(), ex.num());
                 LOG_RET_FALSE(buffer);
             }
@@ -159,7 +159,35 @@ namespace lightq {
                     LOG_ERROR("Failed to send message", -1);
                 }
             } catch (zmq::error_t &ex) {
-                char buffer[256];
+                char buffer[utils::max_small_msg_size];
+                sprintf(buffer, "Exception: %s, error number:%d", ex.what(), ex.num());
+                LOG_RET(buffer, -1);
+            }
+            LOG_RET("failed", -1);
+        }
+        
+        
+        /**
+         * write
+         * @param message
+         * @return 
+         */
+        ssize_t write_msg(const char* message, unsigned length) {
+            LOG_IN("message:%p", message);
+            try {
+                 if(get_zmq_connect_type() == ZMQ_PUB) {
+                   s_sendmore(*p_socket_, topic_);
+                 }
+                
+                if (s_send(*p_socket_, message, length)) {
+                    total_bytes_written_ += length;
+                    total_msg_written_ += 1;
+                    LOG_RET("Successfully send message", length);
+                } else {
+                    LOG_ERROR("Failed to send message", -1);
+                }
+            } catch (zmq::error_t &ex) {
+                char buffer[utils::max_small_msg_size];
                 sprintf(buffer, "Exception: %s, error number:%d", ex.what(), ex.num());
                 LOG_RET(buffer, -1);
             }
@@ -202,7 +230,7 @@ namespace lightq {
                 ++total_msg_read_;
                 LOG_RET("", message.length());
             } catch (zmq::error_t &ex) {
-                char buffer[256];
+                char buffer[utils::max_small_msg_size];
                 sprintf(buffer, "Exception: %s, error number:%d", ex.what(), ex.num());
                 LOG_RET(buffer, -1);
             }
@@ -233,6 +261,10 @@ namespace lightq {
 
         uint32_t get_num_connected_clients() {
             return monitor_.num_clients_;
+        }
+        
+        uint64_t get_total_bytes_written() {
+            return total_bytes_written_;
         }
         
        

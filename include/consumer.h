@@ -161,7 +161,7 @@ namespace lightq {
         void process_consumers() {
             LOG_IN("");
             std::string message;
-            message.reserve(utils::get_max_message_size());
+            message.reserve(utils::max_msg_size);
             while (!stop_) {
                 if(p_storage_->get_broker_type() == broker_config::broker_file && 
                         p_consumer_socket_->get_stream_type() == connection::stream_type::stream_socket ) {
@@ -181,12 +181,18 @@ namespace lightq {
                     if (p_consumer_socket_->get_stream_type() == connection::stream_type::stream_socket) {
                          connection_socket* psocket = (connection_socket*)p_consumer_socket_;
                          while (p_storage_->get_file_total_bytes_written() < psocket->get_write_offset()) {
-                            s_sleep(3); //define magic number fixme
+                            s_sleep(100); //define magic number fixme
                         }
                         result = p_storage_->sendfile_to_socket(p_consumer_socket_);
                     
                     }else {
-                        result = p_storage_->file_to_consumer(p_consumer_socket_);
+                        while (p_storage_->get_file_total_bytes_written()  <= p_storage_->get_total_bytes_read()  + sizeof(uint32_t)) {
+                            s_sleep(100); //define magic number fixme may be implement condition variabl
+                        }
+                        LOG_TRACE("file_total_bytes_written[%lld], file_total_bytes_read[%lld]",
+                               p_storage_->get_file_total_bytes_written(), p_storage_->get_total_bytes_read() );
+                        result = p_storage_->file_to_consumer(p_consumer_socket_, false);
+                        
                     }
 
                 } else if (p_storage_->get_broker_type() == broker_config::broker_queue) {

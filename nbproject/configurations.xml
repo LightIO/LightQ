@@ -51,6 +51,7 @@
       </toolsSet>
       <compileType>
         <ccTool>
+          <developmentMode>0</developmentMode>
           <architecture>2</architecture>
           <commandlineTool>/usr/local/bin/g++-4.9</commandlineTool>
           <incDir>
@@ -58,7 +59,7 @@
             <pElem>include/thirdparty</pElem>
             <pElem>/opt/zeromq/include</pElem>
           </incDir>
-          <commandLine>-DDEBUG -std=c++11 -flto -O0 -DPICOJSON_USE_INT64</commandLine>
+          <commandLine>-DDEBUG -std=c++11 -O0 -DPICOJSON_USE_INT64 -ggdb</commandLine>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
@@ -67,6 +68,7 @@
             <pElem>.</pElem>
             <pElem>/usr/local/opt/zlib/lib</pElem>
           </linkerAddLib>
+          <commandlineTool>/usr/local/bin/g++-4.9</commandlineTool>
           <commandLine>-m64 -lzmq -lz -pthread</commandLine>
         </linkerTool>
       </compileType>

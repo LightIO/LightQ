@@ -80,6 +80,17 @@ s_send (zmq::socket_t & socket, const std::string & string) {
     return (rc);
 }
 
+
+static bool
+s_send (zmq::socket_t & socket, const char* buffer, unsigned length) {
+
+    zmq::message_t message(length);
+    memcpy (message.data(),buffer, length);
+
+    bool rc = socket.send (message);
+    return (rc);
+}
+
 //  Sends string as 0MQ string, as multipart non-terminal
 static bool
 s_sendmore (zmq::socket_t & socket, const std::string & string) {

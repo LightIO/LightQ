@@ -128,6 +128,10 @@ namespace lightq {
          broker_config& get_config()  {
             return config_;
         }
+         
+         broker_storage& get_storage() {
+             return storage_;
+         }
         
     private:
         broker_config config_;

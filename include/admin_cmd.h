@@ -102,14 +102,18 @@ namespace lightq {
              * tojson
              * @return 
              */
-            std::string to_json() {
+            std::string to_json(bool mask_password=false) {
                 LOG_IN("");
                 picojson::value::object obj;
                 obj["cmd"] = picojson::value(cmd_);
                 obj["type"] = picojson::value(type_);
                 obj["topic"] = picojson::value(topic_);
                 obj["user_id"] = picojson::value(user_id_);
-                obj["password"] = picojson::value(password_);
+                if(mask_password) { 
+                    obj["password"] = picojson::value("******");
+                } else {
+                    obj["password"] = picojson::value(password_);
+                }
                 obj["connection_type"] = picojson::value(connection_type_);
                 picojson::value v(obj);
                 std::string json_str = v.serialize(true);
@@ -174,19 +178,23 @@ namespace lightq {
                     topic_ = v.get("topic").get<std::string>();
                 if(v.get("user_id").is<std::string>())
                     user_id_ = v.get("user_id").get<std::string>();
-                if(v.get("password").is<std::string>())
+                if(v.get("password").is<std::string>()) 
                     password_ = v.get("password").get<std::string>();
                 LOG_RET_TRUE("");
 
             }
 
-            std::string to_json() {
+            std::string to_json(bool mask_password=false) {
                 LOG_IN("");
                 picojson::value::object obj;
                 obj["cmd"] =   picojson::value(cmd_);
                 obj["topic"] = picojson::value(topic_);
                 obj["user_id"] = picojson::value(user_id_);
-                obj["password"] = picojson::value(password_);
+                if(mask_password) { 
+                    obj["password"] = picojson::value("******");
+                } else {
+                    obj["password"] = picojson::value(password_);
+                }
                 picojson::value v(obj);
                 std::string json_str = v.serialize(true);
                 LOG_TRACE("json_str [%s]", json_str.c_str());
@@ -202,6 +210,8 @@ namespace lightq {
             const std::string messages_received_str = "messages_received";
             const std::string publishers_count_str = "publishers_count";
             const std::string subscribers_count_str = "subscribers_count";
+            const std::string total_bytes_written_str = "total_bytes_written";
+            const std::string total_bytes_read_str = "total_bytes_read";
             const std::string cmd_ = "stats";
             std::string status_;
             std::string topic_;
@@ -210,6 +220,8 @@ namespace lightq {
             int64_t messages_received_;
             int64_t publishers_count_;
             int64_t subscribers_count_;
+            int64_t total_bytes_written_;
+            int64_t total_bytes_read_;
             
             stats_resp() {
                 status_ = "";
@@ -219,6 +231,8 @@ namespace lightq {
                 messages_received_ = 0;
                 publishers_count_ = 0;
                 subscribers_count_ = 0;
+                total_bytes_written_ = 0;
+                total_bytes_read_ = 0;
             }
 
             std::string to_json() {
@@ -230,6 +244,8 @@ namespace lightq {
                 obj[messages_received_str] = picojson::value(messages_received_);
                 obj[publishers_count_str] = picojson::value(publishers_count_);
                 obj[subscribers_count_str] = picojson::value(subscribers_count_);
+                obj[total_bytes_written_str] = picojson::value(total_bytes_written_);
+                obj[total_bytes_read_str] = picojson::value(total_bytes_read_);
                 picojson::value v(obj);
                 std::string json_str = v.serialize(true);
                 LOG_TRACE("json_str [%s]", json_str.c_str());
@@ -255,6 +271,11 @@ namespace lightq {
                     publishers_count_ = v.get(publishers_count_str).get<int64_t>();
                 if(v.get(subscribers_count_str).is<int64_t>())
                     subscribers_count_ = v.get(subscribers_count_str).get<int64_t>();
+                
+                if(v.get(total_bytes_written_str).is<int64_t>())
+                    total_bytes_written_ = v.get(total_bytes_written_str).get<int64_t>();
+                if(v.get(total_bytes_read_str).is<int64_t>())
+                    total_bytes_read_ = v.get(total_bytes_read_str).get<int64_t>();
                 LOG_RET_TRUE("");
 
             }
@@ -265,9 +286,9 @@ namespace lightq {
         struct create_topic_req {
             const std::string cmd_ = "create_topic";
             std::string topic_;
+            std::string broker_type_; //queue, file, direct 
             std::string admin_user_id_;
             std::string admin_password_;
-            std::string broker_type_; //queue, file, direct 
             std::string user_id_;
             std::string password_;
 
@@ -281,6 +302,8 @@ namespace lightq {
                 }
                 if(v.get("topic").is<std::string>())
                     topic_ = v.get("topic").get<std::string>();
+                if(v.get("broker_type").is<std::string>())
+                    broker_type_ = v.get("broker_type").get<std::string>();
                 if(v.get("admin_user_id").is<std::string>())
                     admin_user_id_ = v.get("admin_user_id").get<std::string>();
                 if(v.get("admin_password").is<std::string>())
@@ -293,15 +316,24 @@ namespace lightq {
 
             }
 
-            std::string to_json() {
+            std::string to_json(bool mask_password=false) {
                 LOG_IN("");
                 picojson::value::object obj;
                 obj["cmd"] = picojson::value(cmd_);
                 obj["topic"] = picojson::value(topic_);
+                obj["broker_type"] = picojson::value(broker_type_);
                 obj["admin_user_id"] = picojson::value(admin_user_id_);
-                obj["admin_password"] = picojson::value(admin_password_);
+                if(mask_password) { 
+                    obj["admin_password"] = picojson::value("******");
+                } else {
+                    obj["admin_password"] = picojson::value(admin_password_);
+                }
                 obj["user_id"] = picojson::value(user_id_);
-                obj["password"] = picojson::value(password_);
+                if(mask_password) { 
+                    obj["password"] = picojson::value("******");
+                } else {
+                    obj["password"] = picojson::value(password_);
+                }
                 picojson::value v(obj);
                 std::string json_str = v.serialize(true);
                 LOG_TRACE("json_str [%s]", json_str.c_str());

@@ -318,6 +318,49 @@ namespace lightq {
 
 
         }
+        
+        
+        /**
+         * write
+         * @param message
+         * @return 
+         */
+        ssize_t write_msg(const char* message, unsigned length) {
+            LOG_IN("message:%s", message);
+            if (endpoint_type_ != endpoint_type::conn_broker) {
+                while (fds_.size() > 0) {
+
+                    if (current_fd_index_ >= fds_.size()) {
+                        current_fd_index_ = 0;
+                    }
+                    ssize_t result = utils::write_size(fds_[current_fd_index_], length, true);
+                    if (result == sizeof (length)) {
+                        LOG_ERROR("Failed to write payload size to socket :%d", fds_[current_fd_index_]);
+                        remove_fd(current_fd_index_);
+                        continue;
+                    }
+                    result = utils::write_buffer(fds_[current_fd_index_], message, length);
+
+                    if (result == -1) {
+                        LOG_ERROR("Failed to write to socket :%d", fds_[current_fd_index_]);
+                        remove_fd(current_fd_index_);
+                        continue;
+                        //don't increment because we failed so next would be next element
+                    } else if (result == 0) {
+                        ++current_fd_index_;
+                        continue;
+                    } else {
+                        ++current_fd_index_;
+                        LOG_RET("success", result);
+                    }
+                }
+                LOG_RET("no consumers", 0);
+            } else {
+                throw std::runtime_error("For broker connection, write must be handled in callback function");
+            }
+
+
+        }
 
         ssize_t client_socket_read_msg(std::string& message, bool ntohl = false) {
             LOG_IN("");
@@ -339,7 +382,7 @@ namespace lightq {
             uint32_t size_to_read = result;
             result = 0;
             while (result <= 0) {
-                result = utils::read_buffer(socket_, buffer_, utils::get_max_message_size(), result);
+                result = utils::read_buffer(socket_, buffer_, utils::max_msg_size, result);
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", socket_);
 
@@ -392,7 +435,7 @@ namespace lightq {
                     uint32_t size_to_read = result;
                     result = 0;
                     while (result <= 0) {
-                        result = utils::read_buffer(fds_[current_fd_index_], buffer_, utils::get_max_message_size(), result);
+                        result = utils::read_buffer(fds_[current_fd_index_], buffer_, utils::max_msg_size, result);
                         if (result == -1) {
                             LOG_ERROR("Failed to write to socket :%d", fds_[current_fd_index_]);
                             remove_fd(current_fd_index_);
@@ -405,7 +448,7 @@ namespace lightq {
                         }
                     }
                 } else {
-                    result = utils::read_line(fds_[current_fd_index_], buffer_, utils::get_max_message_size());
+                    result = utils::read_line(fds_[current_fd_index_], buffer_, utils::max_msg_size);
                 }
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", fds_[current_fd_index_]);

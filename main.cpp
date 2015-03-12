@@ -130,8 +130,18 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             std::string response;
             admin_socket.read_msg(response);
             LOG_EVENT("Stats :%s ", response.c_str());
-            LOG_DEBUG("Stats :%s ", response.c_str());
+           // LOG_DEBUG("Stats :%s ", response.c_str());
             std::cout << "Stats : " << response << std::endl;
+            admin_cmd::stats_resp resp;
+            resp.from_json(response);
+            if (resp.status_ == "error") {
+                LOG_ERROR("Failed to get stat response. response %s", response.c_str());
+                continue;
+            }
+            if(resp.queue_size_ > 10000) {
+                LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
+                s_sleep(resp.queue_size_/1000); 
+            }
             
         }
     }
@@ -166,7 +176,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             LOG_EVENT("Stats :%s ", response.c_str());
             LOG_DEBUG("Stats :%s ", response.c_str());
             std::cout << "Stats : " << response << std::endl;
-        sleep(5);
+        sleep(10);
     }
 
 
@@ -408,7 +418,7 @@ int main(int argc, char** argv) {
         admin_cmd::create_topic_req req;
         req.admin_password_ = "T0p$3cr31";
         req.admin_user_id_ = "lightq_admin";
-        req.broker_type_ = "queue";
+        req.broker_type_ = "file";
         req.topic_ = "test";
         req.user_id_ = "test_admin";
         req.password_ = "T0p$3cr31";

@@ -94,8 +94,9 @@ namespace lightq {
          * @return 
          */
         inline uint64_t get_total_bytes_writen() const {
-            LOG_IN("");
-            LOG_RET("", (unsigned long long)total_bytes_writen_);
+           // LOG_IN("");
+           // LOG_RET("", (unsigned long long)total_bytes_writen_);
+            return total_bytes_writen_;
         }
 
         /**
@@ -128,15 +129,22 @@ namespace lightq {
         ssize_t read(char* buffer, unsigned size_of_buffer, uint64_t offset, bool ntohl = false) {
             LOG_IN("buffer: %p, size_of_buffer :%u, offset:%lld, ntohl: %d",
                     buffer, size_of_buffer, offset, ntohl);
-
+            if(file_fds_.size() == 0) {
+                LOG_DEBUG("No data available to read. try later");
+                LOG_RET("Try again", 0);
+            }
+            uint64_t offset_currentfile = offset;
             for (unsigned i = 0; i < file_fds_.size(); ++i) {
-                if (file_fds_[i]->offset_across_all_files_ < offset) {
+                if (file_fds_[i]->offset_across_all_files_ <= offset) {
+                    offset_currentfile -= file_fds_[i]->offset_across_all_files_;
                     continue; //offset is larger than total bytes written to this file. move to next
 
                 }
-
-                ssize_t bytes_read = file_fds_[i]->read_msg(buffer, size_of_buffer, offset, ntohl);
+                LOG_TRACE("reading from offset: %lld", offset_currentfile);
+                //FIXME: calculate per file offset from global read offset
+                ssize_t bytes_read = file_fds_[i]->read_msg(buffer, size_of_buffer, offset_currentfile, ntohl);
                 if (bytes_read > 0) {
+                    LOG_TRACE("Message read with size: %d", bytes_read);
                     LOG_RET("Success", bytes_read);
                 }
             }
@@ -233,6 +241,15 @@ namespace lightq {
            LOG_RET("", 0);
         }
         
+        ssize_t read_msg(const char* message, uint64_t offset, bool ntohl=false) {
+             LOG_IN("offset [%lld]", offset);
+           
+             ssize_t bytes_read = read(buffer, utils::max_msg_size, offset, ntohl);
+           //  message.append(buffer, bytes_read);
+             LOG_TRACE("Message read: %s", message);
+             LOG_RET("", bytes_read);
+        }
+        
         ssize_t read_msg(std::string& message) {
              LOG_IN("message [%s]", message.c_str());
            throw std::runtime_error("connection_file::read_msg():not implemented");
@@ -244,9 +261,20 @@ namespace lightq {
            throw std::runtime_error("connection_file::write_msg():not implemented");
            LOG_RET("", -1);
         }
-        const std::string& get_current_file() const {
+       
+       ssize_t write_msg(const char* message, unsigned length) {
+           LOG_IN("message [%s]", message);
+           throw std::runtime_error("connection_file::write_msg():not implemented");
+           LOG_RET("", -1);
+        }
+         std::string get_current_file() const {
            LOG_IN("");
-           throw std::runtime_error("connection_file::get_current_file():not implemented");
+           std::string filename;
+           if(file_fds_.size() > current_fd_index_) {
+                filename = file_fds_[current_fd_index_]->file_name_;
+           }
+           LOG_TRACE("filename [%s]", filename.c_str());
+           std::move(filename);
            
         }
 
@@ -267,6 +295,7 @@ namespace lightq {
         uint64_t max_file_size_;
         std::atomic<uint64_t> total_bytes_writen_; //FIXME: Do we need as atomic
         uint64_t msg_counter_;
+        char buffer[utils::max_msg_size]; //128*1024
 
 
         /**

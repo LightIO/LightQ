@@ -20,7 +20,8 @@ namespace lightq {
     public:
 
         broker_storage(broker_config& config) : config_(config),
-        total_enqueued_messages_(0), total_dequeued_messages_(0){
+                total_enqueued_messages_(0), total_dequeued_messages_(0),
+                total_bytes_written_(0), total_bytes_read_(0){
             p_consumer_socket_ = NULL;
         }
 
@@ -28,11 +29,15 @@ namespace lightq {
             LOG_IN("config [%p]", &config_);
             //initialize broker storage
             if (config_.broker_type_ == broker_config::broker_queue) {
+                LOG_DEBUG("Broker type is queue");
                 p_queue_ = new moodycamel::ReaderWriterQueue<std::string>(config_.default_queue_size_);
                 LOG_RET_TRUE("success");
             } else if (config_.broker_type_ == broker_config::broker_file) {
-
+                LOG_DEBUG("Broker type is file");
                 p_file = new connection_file(config_.output_directory_, config_.id_, "", connection::conn_broker, true);
+                LOG_RET_TRUE("success");
+            }else {
+                LOG_DEBUG("Broker type is direct");
                 LOG_RET_TRUE("success");
             }
             LOG_RET_FALSE("Not supported");
@@ -56,34 +61,56 @@ namespace lightq {
             }
             else if (config_.broker_type_ == broker_config::broker_file) {
                 LOG_DEBUG("Broker type is file");
-
+                return write_to_file(message, true);
             }
             LOG_RET_FALSE("failed");
 
         }
-
+        
+       
+        uint64_t get_total_bytes_read() {
+            return total_bytes_read_;
+        }
         /**
          * read file and send to socket
          * @return 
          */
-        ssize_t file_to_consumer(connection* p_consumer_socket) {
+        ssize_t file_to_consumer(connection* p_consumer_socket, bool ntohl=false) {
             LOG_IN("");
             assert(p_file);
             ssize_t result = 0;
-            std::string message;
-            result = p_file->read_msg(message);
-            if (result < 0) {
-                    LOG_ERROR("Failed to read from the file : %s", p_file->get_current_file().c_str());
-                    LOG_RET_FALSE("Failed to read from file")
+            
+            if(get_file_total_bytes_written() + sizeof(uint32_t) <= get_total_bytes_read()) {
+                LOG_RET("No data to read. return", 0);
             }
+            std::string message;
+            
+            buffer_[0] = '\0';
+            result = p_file->read(buffer_,utils::get_max_message_size(), total_bytes_read_, ntohl);
+           // result = p_file->read_msg(message,total_bytes_read_, ntohl);
+            if (result < 0) {
+                 //   LOG_ERROR("Failed to read from the file : %s", p_file->get_current_file().c_str());
+                LOG_ERROR("Failed to read from offset %lld, total bytes written: %lld ", total_bytes_read_, get_file_total_bytes_written());
+                
+                LOG_RET_FALSE("Failed to read from file");
+                            
+            }
+            buffer_[result+1] = '\0'; //set end of string
+            total_bytes_read_+= result;
             if (result > 0) {
-                result = p_consumer_socket->write_msg(message);
+                if(p_consumer_socket_->get_stream_type() == connection::stream_type::stream_socket) {
+                    result = p_consumer_socket->write_msg(buffer_, result);
+                }else if(p_consumer_socket_->get_stream_type() == connection::stream_type::stream_zmq){
+                    unsigned size_of_uint32 = sizeof(uint32_t);
+                    //for zmq, we need to remove the message length (first 4 bytes) and offset(last 4 bytes)
+                    result = p_consumer_socket->write_msg(&buffer_[size_of_uint32], result-size_of_uint32-size_of_uint32);
+                }
             }
             
             if (result >= 0) {
                 LOG_RET("success", result);
             } else {
-                LOG_ERROR("Failed to write to the consumer socket: %s", p_consumer_socket->topic().c_str());
+             //   LOG_ERROR("Failed to write to the consumer socket: %s", p_consumer_socket->topic().c_str());
                 LOG_RET("Failed to write to the consumer socket", result)
             }
 
@@ -185,6 +212,7 @@ namespace lightq {
                         config_.id_.c_str(), p_consumer_socket_->get_resource_uri_().c_str());
                 LOG_RET_FALSE("failure");
             }
+            total_bytes_written_ += bytes_written;
             LOG_RET_TRUE("success");
         }
 
@@ -196,19 +224,22 @@ namespace lightq {
                 LOG_TRACE("Retrying to enqueue message");
             } 
             ++total_enqueued_messages_;
+            total_bytes_written_ += message.length();
             LOG_DEBUG("message  enqueue. Total messages in the queue: %lld ", total_enqueued_messages_);
             LOG_RET_TRUE("enqueued message");
         }
 
-        bool write_to_file(std::string& message, bool write_size) {
+        bool write_to_file(const std::string& message, bool write_size) {
             ssize_t bytes_written = p_file->write_to_file(message, write_size);
             if (bytes_written > 0) {
                 LOG_INFO("message  written to file ");
                 LOG_DEBUG("%d bytes written to file", bytes_written);
+                total_bytes_written_ += bytes_written;
                 LOG_RET_TRUE("success")
             } else {
                 LOG_ERROR("Failed to write to file");
             }
+            LOG_RET_FALSE("failed");
         }
         
 
@@ -220,6 +251,9 @@ namespace lightq {
         connection* p_consumer_socket_;
         uint64_t total_enqueued_messages_;
         uint64_t total_dequeued_messages_;
+        uint64_t total_bytes_written_;
+        uint64_t total_bytes_read_;
+        char buffer_[utils::max_msg_size]; //128*1024
        
 
 

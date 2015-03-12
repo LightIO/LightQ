@@ -42,8 +42,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-m64 -DDEBUG -std=c++11 -flto -O0 -DPICOJSON_USE_INT64
-CXXFLAGS=-m64 -DDEBUG -std=c++11 -flto -O0 -DPICOJSON_USE_INT64
+CCFLAGS=-m64 -DDEBUG -std=c++11 -O0 -DPICOJSON_USE_INT64 -ggdb
+CXXFLAGS=-m64 -DDEBUG -std=c++11 -O0 -DPICOJSON_USE_INT64 -ggdb
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -60,12 +60,12 @@ LDLIBSOPTIONS=-L. -L/opt/zeromq/lib -L. -L/usr/local/opt/zlib/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz -pthread
+	/usr/local/bin/g++-4.9 -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lightq ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz -pthread
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -Iinclude/thirdparty -I/opt/zeromq/include -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -Iinclude -Iinclude/thirdparty -I/opt/zeromq/include -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:

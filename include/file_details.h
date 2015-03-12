@@ -52,13 +52,18 @@ namespace lightq {
          * @return 
          */
         ssize_t read_msg(char* buffer, int buf_size, uint32_t offset, bool ntohl) {
-            LOG_IN("%s", utils::format_str("buffer: %p, buf_Size: %d, offset: %PRIu64 ntohl: %d", buffer, buf_size, offset, ntohl).c_str());
+            LOG_IN("%s", utils::format_str("buffer: %p, buf_Size: %d, offset: %lld ntohl: %d", buffer, buf_size, offset, ntohl).c_str());
             
             unsigned size_of_int = sizeof (unsigned);
             ssize_t size = read_buffer_length(buffer, buf_size, offset, ntohl);
-            if (size <= 0) {
+            if (size == 0) {
                 LOG_RET("Read length of message 0", size);
             }
+             if (size < 0) {
+                LOG_RET("Failed to read message offset[%u]", offset);
+                return -1;
+            }
+            LOG_TRACE("Read length of message : %d", size);
             //   std::cout << "Reading message with length: " << size << std::endl;
             if (size > buf_size) {
                 LOG_ERROR("message size: %d  is larger than buffer size. Dynamic memory allocation not supported", size);
@@ -172,17 +177,19 @@ namespace lightq {
             int flags = O_RDWR | O_CREAT | O_ASYNC | O_NONBLOCK | O_NOATIME | O_LARGEFILE;
 #endif
           //  int fd = open(newfile.c_str(), flags, 0644);
-            int fd = open("/tmp/abc.out", flags, 0644);
-            std::cout << "After open file. fd: " << fd << " \n" << std::flush;
+            int fd = open(newfile.c_str(), flags, 0644);
+            
             if (fd < 0) {
-                std::cout << "After open file\n" << std::flush;
-                LOG_ERROR("Failed to open file: %s.  Error : %d" , newfile.c_str(), errno);
-               // LOG_ERROR("Failed to open file: %s.  Error : %s" , newfile.c_str(), strerror(errno));
+               
+                LOG_ERROR("Failed to create file[%s].  Error[%d], error description[%s]" , 
+                        newfile.c_str(), errno, strerror(errno));
+              
                 return false;
             } else {
-                LOG_INFO("File: %s created.",  newfile.c_str()); 
+                LOG_EVENT("File[%s] is created.", newfile.c_str());
+                LOG_DEBUG("File: %s created.",  newfile.c_str()); 
             }
-            std::cout << "sucess\n" << std::flush;
+           
 
             fd_ = fd;
             file_name_ = newfile;
@@ -306,6 +313,8 @@ namespace lightq {
                  result = pread(fd_, buffer + bytesRead, bytestoRead, offset);
                 if (result < 1) {
                     LOG_ERROR("Failed to read length of the message");
+                    LOG_ERROR("offset_across_all_files_[%lld], file offset[%lld]", offset_across_all_files_, offset_);
+                    LOG_ERROR("buffer: %p, buf_size: %d, offset: %lld, ntohl: %d", buffer, buf_size, offset, ntohl);
                     LOG_RET("Error:", -1);
                 }
                 bytestoRead -= result;
@@ -316,9 +325,12 @@ namespace lightq {
             if (bytesRead > 0) {  
                 unsigned length;
                 std::copy(&buffer[0], &buffer[0] + sizeof (unsigned), reinterpret_cast<char*> (&length));
+                LOG_TRACE("Length before ntohl to read: %u", length);
                 if (ntohl) {
+                     LOG_TRACE("Length before ntohl to read: %u", length);
                     length = ntohl(length); //not needed for file io
                 }
+                LOG_TRACE("Length to read: %u", length);
                 LOG_RET("Success", length);
             }
             LOG_RET("", bytesRead);

@@ -97,8 +97,8 @@ namespace lightq {
                     LOG_DEBUG("Received zero byte.  continue");
                     continue;
                 }
-                LOG_INFO("Received :%s", message.c_str());
-                LOG_EVENT("Received command: %s", message.c_str());
+                LOG_DEBUG("Received :%s", message.c_str());
+              //  LOG_EVENT("Received command: %s", message.c_str());
 
 
                 bool result = process_command(message); //PERF:  Check if we need to have a seperate thread to process the command
@@ -199,8 +199,11 @@ namespace lightq {
             resp.queue_size_ = it->second->get_queue_size();
             resp.messages_received_ = it->second->get_total_msg_received();
             resp.messages_sent_ = it->second->get_total_msg_sent();
+            resp.total_bytes_written_ =  it->second->get_storage().get_file_total_bytes_written();
+            resp.total_bytes_read_ =  it->second->get_storage().get_total_bytes_read();
             if(it->second->get_producer()) {
                 resp.publishers_count_ = it->second->get_producer()->get_num_clients(); 
+                
             }else {
                  resp.publishers_count_ = 0;
             }
@@ -265,8 +268,8 @@ namespace lightq {
             LOG_DEBUG("creating broker_id: %s", config.id_.c_str());
 
             broker_config::broker_type broker_type = broker_config::broker_queue;
-
-            if (req.broker_type_ == "queue") {
+            LOG_DEBUG("Broker type is %s", req.broker_type_.c_str());
+            if (req.broker_type_ == "queue") { //FIXME:  Remove hardcoded strings
                 broker_type = broker_config::broker_queue;
             } else if (req.broker_type_ == "file") {
                 broker_type = broker_config::broker_file;

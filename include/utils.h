@@ -16,11 +16,22 @@
 using namespace std::chrono;
 namespace lightq {
 
+   
     class utils {
     public:
+        enum message_size {
+            max_msg_size = 131072,
+            max_small_msg_size = 256
+            
+        };
         
         inline static uint32_t get_max_message_size() {
             static uint32_t max_msg_size = 128*1024;
+            return max_msg_size;
+        }
+        
+        inline static uint32_t get_max_small_message_size() {
+            static uint32_t max_msg_size = 256;
             return max_msg_size;
         }
 
