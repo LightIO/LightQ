@@ -3,21 +3,20 @@
 It is a high performance,  brokered messaging queue which supports transient (1M msg/sec)  and durable (~300K msg/sec) queues. Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
 
 ###Features:
-1. Transient queues using raw socket, ZeroMQ
-2. Durable queues using socket as consumers and file as storage (Similar to <B>Kafka</B>)
-3. Authentication per topic (userid/password validation)
-4. Header only project (Embed with your project) 
-5. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
-6. Consumer as Subscribers (Each consumer gets a copy of a message)
-7. Both subscriber and pipelining mode are supported for a single topic
-8. Multi Producers/Consumers for single topic
-9. Unlimited topics
-10. JSON protocol to create topic and join topic (at runtime)
-11. C++11 support/require
-12. Logging support
-13. Dynamic port allocation for topic, consumer, producer
-14. Cluster support (todo)
-15. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
+1. Transient and durable queue (Similar to <B>Kafka</B>)
+2. Authentication per topic (userid/password validation)
+3. Header only project (Embed with your project) 
+4. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
+5. Consumer as Subscribers (Each consumer gets a copy of a message)
+6. Both subscriber and pipelining mode are supported for a single topic
+7. Multi Producers/Consumers for single topic
+8. Unlimited topics
+9. JSON protocol to create topic and join topic (at runtime)
+10. C++11 support/require
+11. Logging support
+12. Dynamic port allocation for topic, consumer, producer
+13. Cluster support (todo)
+14. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
 
 
 It is mostly header only project with main.cpp as an example for broker, producer and consumer.
