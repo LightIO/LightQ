@@ -21,9 +21,9 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
  
- ##Protocol:
+##Protocol: 
 
- ###Create a Topic:  
+### Create a Topic:  
  
 
      Send a request  to the broker
@@ -43,6 +43,45 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
        "cmd": "create_topic",
        "description": "topic created successfully",
        "status": "ok"
+    }
+    
+
+###Join Topic (Consumer):
+
+    Request:
+    {
+       "cmd": "join",
+       "connection_type": "zmq",
+       "password": "T0p$3cr31",
+       "topic": "test",
+       "type": "pull",
+       "user_id": "test_admin"
+    }
+    Response: 
+    {
+       "bind_uri": "tcp://127.0.0.1:5002",
+       "cmd": "join",
+       "status": "ok",
+       "topic": "test"
+    }
+ 
+### Join Topic (Producer):
+
+    Request:
+    {
+       "cmd": "join",
+       "connection_type": "zmq",
+       "password": "T0p$3cr31",
+       "topic": "test",
+       "type": "pub",
+       "user_id": "test_admin"
+     }
+    Response:
+    {
+      "bind_uri": "tcp://127.0.0.1:5003",
+      "cmd": "join",
+      "status": "ok",
+      "topic": "test"
     }
     
 #Performance:
