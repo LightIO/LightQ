@@ -7,6 +7,7 @@ Laptop hardware:
     Memory 16 GB 1600 MHz DDR3
     
 Broker Type: Transient
+Broker, Consumer and Producer is running on a same machine (Sharing memory/CPU)
 
 ##100 bytes, 100M messages
 
