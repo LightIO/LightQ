@@ -139,7 +139,7 @@ Consumer:
     2560000004 bytes received
     85.9834 MB per second.
 
-## 512 bytes 10M Messages
+## 512 bytes 1M Messages
 
 Producer:
 
@@ -159,7 +159,7 @@ Consumer:
     512000004 bytes received
     156.2437 MB per second.
     
-## 1024 bytes 10M Messages
+## 1024 bytes 1M Messages
 
 Producer:
 
