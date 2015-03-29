@@ -147,20 +147,20 @@ Consumer:
 Producer:
 
     ./dist/Release/GNU-MacOSX/lightq producer 100000000 100 event
-    Total Messages:10000000, Time Taken:8.52983 seconds.
-    Start Time: 1427670677135, End Time:1427670685665
-    1172356 messages per seconds.
-    1000000000 bytes sent
-    111.8046 MB per second.
+    Total Messages:100000000, Time Taken:91.847 seconds.
+    Start Time: 1427672217256, End Time:1427672309103
+    1088766 messages per seconds.
+    10000000000 bytes sent
+    103.8329 MB per second.
     
 Consumer:
 
     ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
-    Total Messages:10000001, Time Taken:8.54086 seconds.
-    Start Time: 1427670677139, End Time:1427670685680
-    1170842 messages per seconds.
-    1000000004 bytes received
-    111.6602 MB per second.
+    Total Messages:100000001, Time Taken:91.8728 seconds.
+    Start Time: 1427672217260, End Time:1427672309133
+    1088462 messages per seconds.
+    10000000004 bytes received
+    103.8038 MB per second.
     
 ##256 bytes 10M Messages
 
@@ -187,20 +187,20 @@ Consumer:
 Producer:
 
     ./dist/Release/GNU-MacOSX/lightq producer 100000000 256 event
-    Total Messages:10000000, Time Taken:9.22366 seconds.
-    Start Time: 1427671010140, End Time:1427671019363
-    1084168 messages per seconds.
-    2560000000 bytes sent
-    264.6896 MB per second.
+    Total Messages:100000000, Time Taken:99.4206 seconds.
+    Start Time: 1427672381712, End Time:1427672481133
+    1005827 messages per seconds.
+    25600000000 bytes sent
+    245.5634 MB per second.
     
 Consumer:
 
     ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
-    Total Messages:10000001, Time Taken:9.24846 seconds.
-    Start Time: 1427671010144, End Time:1427671019393
-    1081260 messages per seconds.
-    2560000004 bytes received
-    263.9797 MB per second.
+    Total Messages:100000001, Time Taken:99.4544 seconds.
+    Start Time: 1427672381723, End Time:1427672481178
+    1005486 messages per seconds.
+    25600000004 bytes received
+    245.4800 MB per second.
 
 ## 512 bytes 10M Messages
 
@@ -227,20 +227,20 @@ Consumer:
 Producer:
 
     ./dist/Release/GNU-MacOSX/lightq producer 100000000 512 event
-    Total Messages:10000000, Time Taken:9.4038 seconds.
-    Start Time: 1427671108919, End Time:1427671118322
-    1063399 messages per seconds.
-    5120000000 bytes sent
-    519.2381 MB per second.
+    Total Messages:100000000, Time Taken:103.17 seconds.
+    Start Time: 1427672549030, End Time:1427672652200
+    969269 messages per seconds.
+    51200000000 bytes sent
+    473.2762 MB per second.
     
 Consumer:
 
     ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
-    Total Messages:10000001, Time Taken:9.42733 seconds.
-    Start Time: 1427671108928, End Time:1427671118355
-    1060745 messages per seconds.
-    5120000004 bytes received
-    517.9422 MB per second.
+    Total Messages:100000001, Time Taken:103.184 seconds.
+    Start Time: 1427672549040, End Time:1427672652224
+    969144 messages per seconds.
+    51200000004 bytes received
+    473.2149 MB per second.
     
 ## 1024 bytes 10M Messages
 
