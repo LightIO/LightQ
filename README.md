@@ -9,12 +9,16 @@ It is a high performance,  brokered messaging queue which supports transient (1M
 4. Header only project (Embed with your project) 
 5. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
 6. Consumer as Subscribers (Each consumer gets a copy of a message)
-7. Multi Producers/Consumers for single topic
-8. Unlimited topics
-9. JSON protocol to create topic and join topic (at runtime)
-10. C++11 support/require
-11. Logging support
-12. Dynamic port allocation for topic, consumer, producer
+7. Both subscriber and pipelining mode are supported for a single topic
+8. Multi Producers/Consumers for single topic
+9. Unlimited topics
+10. JSON protocol to create topic and join topic (at runtime)
+11. C++11 support/require
+12. Logging support
+13. Dynamic port allocation for topic, consumer, producer
+14. Cluster support (todo)
+15. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
+
 
 It is mostly header only project with main.cpp as an example for broker, producer and consumer.
 
