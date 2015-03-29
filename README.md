@@ -4,7 +4,7 @@ It is a high performance,  brokered messaging queue which supports transient and
 
 NOTE: This is first draft and is not optimized and bug free.
 
-Example: (transient broker)
+###Example: (transient broker)
 
 Start Broker: (broker type:  queue, logging level: event)
     ./dist/Release/GNU-MacOSX/lightq queue event
