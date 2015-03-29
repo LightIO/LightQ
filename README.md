@@ -20,6 +20,29 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
 
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
+ ##Protocol:
+
+ ###Create a Topic:  
+ 
+
+     Send a request  to the broker
+    {
+     "admin_password": "T0p$3cr31",
+     "admin_user_id": "lightq_admin",
+     "broker_type": "queue",
+     "cmd": "create_topic",
+     "password": "T0p$3cr31",
+     "topic": "test",
+     "user_id": "test_admin"
+    }
+
+
+    Response: 
+    {
+       "cmd": "create_topic",
+       "description": "topic created successfully",
+       "status": "ok"
+    }
     
 #Performance:
 
