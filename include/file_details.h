@@ -148,7 +148,7 @@ namespace lightq {
             }
            
             unsigned offset_written = 0;
-            if ((offset_written = write_offset()) <= 0) {
+            if (include_offset  && (offset_written = write_offset()) <= 0) {
                 LOG_RET("Error", offset_written);
             }
            

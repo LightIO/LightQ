@@ -10,7 +10,7 @@
 
 #include "broker_config.h"
 #include "thirdparty/readerwriterqueue.h"
-#include "connection_socket.h"
+//#include "connection_socket.h"
 #include "connection_file.h"
 
 namespace lightq {
@@ -23,6 +23,21 @@ namespace lightq {
                 total_enqueued_messages_(0), total_dequeued_messages_(0),
                 total_bytes_written_(0), total_bytes_read_(0){
             p_consumer_socket_ = NULL;
+            p_file = NULL;
+        }
+        
+        ~broker_storage() {
+            if(queue_to_file_thread_.joinable()) {
+                queue_to_file_thread_.join();
+            }
+            if(p_consumer_socket_) {
+                delete p_consumer_socket_;
+                p_consumer_socket_ = NULL;
+            }
+            if(p_file) {
+                delete p_file;
+                p_file = NULL;
+            }
         }
 
         bool init(broker_config& config_) {
@@ -36,11 +51,45 @@ namespace lightq {
                 LOG_DEBUG("Broker type is file");
                 p_file = new connection_file(config_.output_directory_, config_.id_, "", connection::conn_broker, true);
                 LOG_RET_TRUE("success");
+            }else if (config_.broker_type_ == broker_config::broker_queue_file) {
+                p_queue_ = new moodycamel::ReaderWriterQueue<std::string>(config_.default_queue_size_);
+                p_file = new connection_file(config_.output_directory_, config_.id_, "", connection::conn_broker, true);
+                run_queue_to_file_loop();
             }else {
                 LOG_DEBUG("Broker type is direct");
                 LOG_RET_TRUE("success");
             }
             LOG_RET_FALSE("Not supported");
+        }
+        
+        /**
+         * queue to file loop
+         * @return 
+         */
+        bool run_queue_to_file_loop() {
+            LOG_IN("");
+            std::thread th = std::thread([&] {
+                std::string message;
+                message.reserve(utils::max_msg_size);
+                while(true) {
+                    while(get_queue_size() <= 0) {
+                        s_sleep(10);
+                    }
+                    ssize_t bytes_read = get_message_from_queue(message);
+                    if(bytes_read) {
+                        write_to_file(message, true);
+                    }
+                }
+                
+            });
+             queue_to_file_thread_.swap(th);
+
+            if(th.get_id() == std::thread::id()) {
+                LOG_DEBUG("Swap is successfull");
+            }else {
+                th.detach();
+            }
+            
         }
 
         /**
@@ -55,7 +104,7 @@ namespace lightq {
                 LOG_DEBUG("Broker type is direct");
                 return direct_write_consumer(message);
 
-            } else if (config_.broker_type_ == broker_config::broker_queue) {
+            } else if (config_.broker_type_ == broker_config::broker_queue || config_.broker_type_ == broker_config::broker_queue_file) {
                 LOG_DEBUG("Broker type is queue");
                 return write_to_queue(message);
             }
@@ -70,6 +119,10 @@ namespace lightq {
        
         uint64_t get_total_bytes_read() {
             return total_bytes_read_;
+        }
+        
+        uint64_t add_total_bytes_read(uint64_t bytes_read) {
+            return total_bytes_read_ += bytes_read;
         }
         /**
          * read file and send to socket
@@ -116,33 +169,7 @@ namespace lightq {
 
         }
         
-        /**
-         * send file to socket
-         * @param p_consumer_socket
-         * @return 
-         */
-        ssize_t sendfile_to_socket(connection* p_consumer_socket) {
-            LOG_IN("");
-            ssize_t result = 0;
-            connection_socket* psocket = (connection_socket*) p_consumer_socket;
-            int socket_fd = psocket->get_next_fd();
-            LOG_DEBUG("received socket fd: %d", socket_fd);
-            
-            uint32_t offset = psocket->get_write_offset();
-           
-            LOG_DEBUG("Write offset: %u", offset);
-            result = 0;
-            while (result < 0) {
-                result = p_file->send_file(socket_fd, offset, config_.max_message_size);
-                if (result == -1) {
-                    psocket->remove_fd(socket_fd);
-                    break;
-                } else {
-                    psocket->set_write_offset(offset + result);
-                }
-            }
-            LOG_RET("", result);
-        }
+        
 
 
         /**
@@ -177,7 +204,7 @@ namespace lightq {
         }
 
         inline uint64_t get_queue_size_approx() {
-            if (config_.broker_type_ == broker_config::broker_queue) {
+            if (config_.broker_type_ == broker_config::broker_queue  && p_queue_) {
                 return p_queue_->size_approx();
             } else {
                 return 0;
@@ -195,7 +222,13 @@ namespace lightq {
         }
         
         inline uint64_t get_file_total_bytes_written() {
-            return p_file->get_total_bytes_writen();
+            if(p_file)
+                return p_file->get_total_bytes_writen();
+            return 0;
+        }
+        
+        inline connection_file* get_file_connection() {
+            return p_file;
         }
        
     private:
@@ -254,6 +287,7 @@ namespace lightq {
         uint64_t total_bytes_written_;
         uint64_t total_bytes_read_;
         char buffer_[utils::max_msg_size]; //128*1024
+        std::thread queue_to_file_thread_;
        
 
 

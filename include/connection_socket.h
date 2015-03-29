@@ -18,6 +18,7 @@
 #include "connection.h"
 #include "utils.h"
 #include "broker_config.h"
+#include "broker_storage.h"
 namespace lightq {
 
     class connection_socket : public connection {
@@ -31,8 +32,8 @@ namespace lightq {
                 const std::string& uri,
                 endpoint_type endpoint_type,
                 connection::socket_connect_type socket_connect_type = connection::bind_socket,
-                bool non_blocking = true,
-                bool client_pull=true) :
+                bool non_blocking = false,
+                bool client_pull=false) :
                 client_pull_(client_pull),
         connection(topic, uri, connection::stream_socket,
         endpoint_type,
@@ -46,6 +47,7 @@ namespace lightq {
             //    process_fd_callback_ = pcallback;
             current_write_offset_ = 0;
             current_fd_index_ = 0;
+            p_storage_ = 0;
             LOG_OUT("");
         }
 
@@ -65,8 +67,9 @@ namespace lightq {
 
         //init
 
-        bool init() {
+        bool init(broker_storage *pstorage) {
             LOG_IN("");
+            p_storage_ = pstorage;
             bool result = false;
             if (socket_connect_type_ == socket_connect_type::bind_socket) {
                 result = init_server();
@@ -80,6 +83,11 @@ namespace lightq {
                 LOG_RET_FALSE("Failed to initialize");
             }
 
+        }
+        
+        bool init() {
+            LOG_IN("");
+            return init(NULL);
         }
 
         /**
@@ -162,31 +170,41 @@ namespace lightq {
          * @return 
          */
         bool run() {
-
+            LOG_IN("");
             bind_thread_id_ = std::thread([&] {
                 if (endpoint_type_ == endpoint_type::conn_broker) {
+                    LOG_TRACE("Running run_broker_loop");
                     run_broker_loop();
                 } else {
+                    LOG_TRACE("Running server loop");
                     while (!stop_) {
                         long on = 1L;
+                        LOG_DEBUG("Accepting connection...");
                         int connfd = accept(listen_fd_, (struct sockaddr*) NULL, NULL);
                         if (connfd < 0) {
                             LOG_ERROR("Failed to accept connect on listen fd: %d", listen_fd_);
                             continue;
                         }
+                        LOG_DEBUG("Received connect connection");
                         std::string remote_host;
                         uint32_t remote_port;
                         if (get_remote_address(connfd, remote_host, remote_port)) {
                             LOG_EVENT("Received connection from remote  host: %s:%u for fd: %d",
                                     remote_host.c_str(), remote_port, connfd);
+                        }else {
+                            LOG_ERROR("Failed to get remote address");
                         }
                         // int status = fcntl(connfd, F_SETFL, fcntl(connfd, F_GETFL, 0) | O_NONBLOCK);
                         /* if (non_blocking_ && (ioctl(connfd, (int) FIONBIO, (char *) &on) == -1)) {
                              LOG_ERROR("Failed : ioctl FIONBIO  on socket connected to %s:%d. Err: %d, ErrDesc: %s", 
                                      host_.c_str(), port_, errno, strerror(errno));
                          }*/
+                        
                         fds_.push_back(connfd);
+                        LOG_EVENT("Connect with FD %d is connected. Total clients: %u", connfd, fds_.size());
+                        
                     }
+                    LOG_DEBUG("Existing while loop");
                 }
             });
             LOG_RET_TRUE("");
@@ -233,12 +251,15 @@ namespace lightq {
                             }
                             // fds_.push_back(connfd);
                         } else {
-
-                            if (process_fd_callback_(i) < 0) {
+                            
+                          /*  if (process_fd_callback_(i) < 0) {
                                 LOG_ERROR("Failed to read from fd %d. Disconnecting..", i);
                                 close(i);
                                 FD_CLR(i, &active_fd_set);
-                            };
+                            };*/
+                            
+                            ssize_t offset = read_client_offset(i);
+                            p_storage_->get_file_connection()->send_file(i, offset,p_storage_->get_file_total_bytes_written()-offset);
                         }
                     }
                 }
@@ -246,12 +267,18 @@ namespace lightq {
             }
             LOG_RET_TRUE("loop exit");
         }
+        
+        ssize_t read_client_offset(int fd) {
+            LOG_IN("fd[%d]", fd);
+            ssize_t offset = utils::read_size(fd, true);
+            LOG_RET("Offset read", offset);
+        }
 
         /**
          * get next fd 
          * @return 
          */
-        int get_next_fd() {
+        unsigned get_next_fd() {
             LOG_IN("");
             if (fds_.size() == 0) {
                 LOG_RET("No fd", -1);
@@ -262,6 +289,10 @@ namespace lightq {
             int fd = fds_[current_fd_index_++];
             LOG_DEBUG("returning fd: %d", fd);
             LOG_RET("fd: %d", fd);
+        }
+        
+        unsigned get_total_connected_clients() {
+            return fds_.size();
         }
 
         /**
@@ -365,7 +396,7 @@ namespace lightq {
         ssize_t client_socket_read_msg(std::string& message, bool ntohl = false) {
             LOG_IN("");
             
-            LOG_DEBUG("Reading siz from socket[%d]", socket_);
+            LOG_DEBUG("Reading size from socket[%d]", socket_);
             ssize_t result = 0;
             while(result  <= 0) {
                  result = utils::read_size(socket_, ntohl);
@@ -378,11 +409,47 @@ namespace lightq {
                 }
             }
             LOG_DEBUG("Received  size  to read[ %u]", result);
-            //buffer_[0] = '\0';
+            buffer_[0] = '\0';
             uint32_t size_to_read = result;
             result = 0;
             while (result <= 0) {
-                result = utils::read_buffer(socket_, buffer_, utils::max_msg_size, result);
+                result = utils::read_buffer(socket_, buffer_, utils::max_msg_size, size_to_read);
+                if (result == -1) {
+                    LOG_ERROR("Failed to write to socket :%d", socket_);
+
+                    LOG_RET("error", -1);
+                }
+                if (result == 0) {
+                    LOG_DEBUG("read timeout.  Trying again..");
+                    s_sleep(2000);
+                }
+            }
+            LOG_DEBUG("Received bytes [ %u]", result);
+            LOG_RET("", result);
+
+        }
+        
+        ssize_t client_socket_read_msg(char* message, unsigned length, bool ntohl = false) {
+            LOG_IN("");
+            
+            LOG_DEBUG("Reading size from socket[%d]", socket_);
+            ssize_t result = 0;
+            while(result  <= 0) {
+                 result = utils::read_size(socket_, ntohl);
+                if (result < 0) {
+                    LOG_ERROR("Failed to write payload size to socket :%d", socket_);
+
+                    LOG_RET("error", -1);
+                } else if (result == 0) {
+                    LOG_DEBUG("no data available to read :%d", socket_);
+                }
+            }
+            LOG_DEBUG("Received  size  to read[ %u]", result);
+            message[0] = '\0';
+            uint32_t size_to_read = result;
+            result = 0;
+            while (result <= 0) {
+                result = utils::read_buffer(socket_, message, utils::max_msg_size, size_to_read);
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", socket_);
 
@@ -398,10 +465,20 @@ namespace lightq {
 
         }
 
+
         //read
 
         ssize_t read_msg(std::string& message) {
             return read_msg(message, false);
+        }
+        
+        ssize_t read_msg(char* message, unsigned length, bool ntohl = false) {
+            if(endpoint_type_ == endpoint_type::conn_consumer && socket_connect_type_ == socket_connect_type::connect_socket) {
+                LOG_DEBUG("Client socket type.");
+                return client_socket_read_msg(message, ntohl);
+            }
+            LOG_ERROR("Not implemented");
+            LOG_RET("Not implemented", -1);
         }
 
         ssize_t read_msg(std::string& message, bool ntohl = false) {
@@ -409,6 +486,7 @@ namespace lightq {
             ssize_t result = -1;
             
             if(endpoint_type_ == endpoint_type::conn_consumer && socket_connect_type_ == socket_connect_type::connect_socket) {
+                LOG_DEBUG("Client socket type.");
                 return client_socket_read_msg(message, ntohl);
             }
 
@@ -473,15 +551,16 @@ namespace lightq {
         }
 
         uint32_t get_write_offset() {
-            LOG_IN("");
-            LOG_DEBUG("current_write_offset_[%u]", current_write_offset_);
-            LOG_RET("", current_write_offset_);
+          //  LOG_IN("");
+          //  LOG_DEBUG("current_write_offset_[%u]", current_write_offset_);
+         //   LOG_RET("", current_write_offset_);
+            return current_write_offset_;
         }
 
         void set_write_offset(uint32_t offset) {
-            LOG_IN("ofset[%u]", offset);
+         //   LOG_IN("ofset[%u]", offset);
             current_write_offset_ = offset;
-            LOG_OUT("");
+          //  LOG_OUT("");
         }
 
         /**
@@ -550,7 +629,7 @@ namespace lightq {
             }
             host = ipstr;
             LOG_DEBUG("Remote address: IP: %s,  Port: %u", host.c_str(), port);
-            LOG_RET_TRUE("");
+            LOG_RET_TRUE("success");
         }
 
         int socket_;
@@ -569,6 +648,7 @@ namespace lightq {
         process_fd_callback process_fd_callback_;
         char buffer_[131072]; //128*1024 not thread safe
         bool client_pull_;
+        broker_storage *p_storage_;
         
     };
 }

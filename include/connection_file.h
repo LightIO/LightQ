@@ -156,15 +156,13 @@ namespace lightq {
          * @param msg
          * @return 
          */
-        ssize_t write_to_file(const std::string& msg, bool write_msg_size=true) {
+        ssize_t write_to_file(const std::string& msg, bool write_msg_size=true, bool include_offset = false) {
             LOG_IN("msg: %s", msg.c_str());
             if(!set_current_file()) {
                 LOG_RET("failed", -1);
             }
-            bool include_offset = false;
-            if(write_msg_size) {
-                include_offset = true;
-            }
+           
+            
             int bytes_written = file_fds_[current_fd_index_]->write_msg(msg, write_msg_size, include_offset);
             if (bytes_written > 0) {
                 msg_counter_++;
@@ -180,13 +178,10 @@ namespace lightq {
          * @param msg
          * @return 
          */
-        ssize_t write_to_file(std::string&& msg, bool write_msg_size=true) {
+        ssize_t write_to_file(std::string&& msg, bool write_msg_size=true, bool include_offset = false) {
             LOG_IN("msg: %s", msg.c_str());
             set_current_file();
-            bool include_offset = false;
-            if(write_msg_size) {
-                include_offset = true;
-            }
+           
             int bytes_written = file_fds_[current_fd_index_]->write_msg(msg, write_msg_size, include_offset );
             if (bytes_written > 0) {
                 msg_counter_++;
@@ -224,15 +219,18 @@ namespace lightq {
          */
         ssize_t send_file(int fd, uint64_t offset, uint32_t size) {
             LOG_IN("fd[%d], offset[%u], size[%u]", fd, offset, size);
+            uint64_t offset_currentfile = offset;
             for (unsigned i = 0; i < file_fds_.size(); ++i) {
-                LOG_DEBUG("i[%d], offset[%u]", i, offset);
-                if (file_fds_[i]->offset_across_all_files_ < offset) {
+                LOG_DEBUG("file_fds_[i]->offset_across_all_files_[%lld], offset[%u]", file_fds_[i]->offset_across_all_files_, offset);
+                if (file_fds_[i]->offset_across_all_files_ <= offset) {
+                      offset_currentfile -= file_fds_[i]->offset_across_all_files_;
                     LOG_DEBUG("Skipping the fd index [%d]", i);
                     continue; //offset is larger than total bytes written to this file. move to next
                 }
-                ssize_t bytes_read = file_fds_[i]->send_file(fd, offset, size);
+                LOG_DEBUG("Sending file from offset %u for size %u ", offset_currentfile, size);
+                ssize_t bytes_read = file_fds_[i]->send_file(fd, offset_currentfile, size);
                 if (bytes_read > 0) {
- 
+                    
                     LOG_RET("Success", bytes_read);
                 }else {
                     LOG_RET("failed", -1);

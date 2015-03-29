@@ -24,7 +24,7 @@
 using namespace std::chrono;
 using namespace std;
 using namespace lightq;
-//namespace prakashq {
+//namespace lightq {
 
 void producer_client(uint64_t counter, uint32_t payload_size, bool compress = false) {
     LOG_IN("producer num_messages[%lld] message_size[%u], compress[%d]", counter, payload_size, compress);
@@ -116,6 +116,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
     }
 
     
+    uint32_t last_queue_size = 0;
     for (uint64_t i = 0; i < counter; i++) {
         result = push_socket.write_msg(message);
         num_bytes_sent += result;
@@ -141,7 +142,11 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             if(resp.queue_size_ > 10000) {
                 LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
                 s_sleep(resp.queue_size_/1000); 
+            }else if(last_queue_size < resp.queue_size_) {
+                s_sleep((resp.queue_size_ - last_queue_size)/100);
             }
+            last_queue_size = resp.queue_size_;
+            
             
         }
     }
@@ -200,7 +205,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
     sleep(2);
     std::string response;
     admin_cmd::join_req req;
-    req.connection_type_ = "zmq";
+    req.connection_type_ = socket_type;
     req.password_ = "T0p$3cr31";
     req.user_id_ = "test_admin";
     req.type_ = sub_mod;
@@ -255,24 +260,28 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         ssize_t result = 0;
         uint32_t offset = 0;
         uint64_t num_bytes_received = 0;
+        char buffer[utils::max_msg_size];
         while (true) {
             if (socket_type == "socket") {
 
                 connection_socket *p_conn_sock = (connection_socket*) p_pull_socket;
-                ssize_t off_sent = p_conn_sock->send_offset(offset);
-                if (off_sent <= 0) {
-                    s_sleep(5);
-                    LOG_DEBUG("offset sent size: %u", off_sent);
-                    continue;
-                }
+//                ssize_t off_sent = p_conn_sock->send_offset(offset);
+//                if (off_sent <= 0) {
+//                    s_sleep(5);
+//                    LOG_DEBUG("offset sent size: %u", off_sent);
+//                    continue;
+//                }
                 result = 0;
                 while (result <= 0) {
-                    if ((result = p_conn_sock->read_msg(message, true)) < 0) {
+                    buffer[0] = '\0';
+                    if ((result = p_conn_sock->read_msg(buffer, utils::max_msg_size, false)) < 0) {
                         LOG_ERROR("Failed to read message");
                     } else if (result == 0) {
                         //  LOG_ERROR("timeout.reting after 1 ms");
                         s_sleep(5);
                     }
+                    buffer[result] = '\0'; //remove last 4 bytes which is offset
+                   
                 }
             } else {
                 //// while(result < )
@@ -283,6 +292,14 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
                     s_sleep(1);
                 }
             }
+            
+            unsigned msg_length = 0;
+            if(socket_type == "socket") {
+                msg_length = strlen(buffer);
+            }else {
+                msg_length = message.length();
+            }
+            LOG_TRACE("Received length: %u", msg_length);
 
             ++counter;
             offset += result; //FIXME: read offset from payload
@@ -290,14 +307,28 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
             if (counter == 1) {
                 t1 = high_resolution_clock::now();
             }
-            if (message.length())
+            if (msg_length) {
+                if(socket_type == "socket") {
+                 LOG_TRACE("Received %s", buffer);
+                  if (msg_length == 4 && std::strstr(buffer,"STOP")) {
+                    break;
+                }else if (msg_length == 8 && std::strstr(buffer,"STOP")) {
+                    break;
+                }
+                }else {
                 LOG_TRACE("Received: %s", message.c_str());
-            if (message.length() == 4 && message == "STOP") {
+                 if (msg_length == 4 && std::strstr(message.c_str(),"STOP")) {
+                break;
+            }else if (msg_length == 8 && std::strstr(message.c_str(),"STOP")) {
                 break;
             }
+                }
+            }
+           
         }
-        delete p_pull_socket;
+        
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        
         std::cout.unsetf(ios::hex);
         duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
         std::cout << "Total Messages:" << counter << ", Time Taken:" << time_span.count() << " seconds." << std::endl;
@@ -306,7 +337,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         std::cout << (uint64_t) (counter / time_span.count()) << " messages per seconds." << std::endl;
         std::cout << num_bytes_received << " bytes received" << std::endl;
         std::cout << std::fixed << std::setprecision(4) << num_bytes_received / (1024 * 1024 * time_span.count()) << " MB per second." << std::endl;
-
+        delete p_pull_socket;
     
 
     sleep(50000);
@@ -393,9 +424,12 @@ int main(int argc, char** argv) {
         }
         consumer_client(broker_type, socket_type, sub_mode);
     } else {
-
+        std::string broker_type = "queue";
         if (argc > 1) {
-            enabled_loglevel(argv[1]);
+            broker_type = argv[1];
+        }
+        if (argc > 2) {
+            enabled_loglevel(argv[2]);
         }
         broker_manager mgr("tcp://*:" + std::to_string(broker_config::get_next_port()));
         if (!mgr.init()) {
@@ -418,11 +452,12 @@ int main(int argc, char** argv) {
         admin_cmd::create_topic_req req;
         req.admin_password_ = "T0p$3cr31";
         req.admin_user_id_ = "lightq_admin";
-        req.broker_type_ = "file";
+        req.broker_type_ = broker_type;
         req.topic_ = "test";
         req.user_id_ = "test_admin";
         req.password_ = "T0p$3cr31";
         std::string response;
+        LOG_INFO("Sending %s", req.to_json().c_str())
         ssize_t size = admin_socket.write_msg(req.to_json());
         if (size <= 0) {
             LOG_ERROR("Failed to create topic ");

@@ -150,9 +150,9 @@ namespace lightq {
         ss << boost::format("|%5d|%8X|%s:%u|%s%s") % PID % (tid & 0xffffffff) % filename % line % func_inout %msg;
         if(logtype == log::LOG_EVENT) {
             event_logger()->notice(ss.str());
-        }else {
-             logger()->force_log((spdlog::level::level_enum)logtype,ss.str().c_str());
         }
+        logger()->force_log((spdlog::level::level_enum)logtype,ss.str().c_str());
+        
       
 #else
         if(logtype == log::LOG_EVENT) {

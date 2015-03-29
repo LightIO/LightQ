@@ -1,0 +1,129 @@
+[2015-03-26 17:07:01.631] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:350|void enabled_loglevel(const string&)|Enabling log level : event
+[2015-03-26 17:07:05.641] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:100|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 0,
+  "messages_sent": 0,
+  "publishers_count": 0,
+  "queue_size": 0,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:05.641] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 1,
+  "messages_sent": 0,
+  "publishers_count": 0,
+  "queue_size": 1,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:09.687] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 499511,
+  "messages_sent": 493001,
+  "publishers_count": 0,
+  "queue_size": 6510,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:13.369] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 999507,
+  "messages_sent": 990001,
+  "publishers_count": 0,
+  "queue_size": 9506,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:17.089] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 1499525,
+  "messages_sent": 1494501,
+  "publishers_count": 0,
+  "queue_size": 5024,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:20.957] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 1999517,
+  "messages_sent": 1993110,
+  "publishers_count": 0,
+  "queue_size": 6407,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:24.834] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 2499511,
+  "messages_sent": 2495501,
+  "publishers_count": 0,
+  "queue_size": 4010,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:28.189] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 2999515,
+  "messages_sent": 2990501,
+  "publishers_count": 0,
+  "queue_size": 9014,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:31.970] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 3499513,
+  "messages_sent": 3493501,
+  "publishers_count": 0,
+  "queue_size": 6012,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:36.186] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 3999504,
+  "messages_sent": 3997001,
+  "publishers_count": 0,
+  "queue_size": 2503,
+  "status": "ok",
+  "subscribers_count": 1,
+  "total_bytes_read": 0,
+  "total_bytes_written": 0
+}
+ 
+[2015-03-26 17:07:40.303] [lightq_event_logger] [notice] |69657|  1B5087|main.cpp:133|void producer_client(uint64_t, uint32_t, bool)|Stats :{
+  "cmd": "stats",
+  "messages_received": 4499517,
+  "messages_sent": 4494001,
+  "publishers_count": 0,
+  "queue_size": 5516,
+  "status": "ok",
+  "subscribers_count": 1,

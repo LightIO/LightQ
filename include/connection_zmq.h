@@ -100,7 +100,7 @@ namespace lightq {
                     LOG_INFO("Binding to %s", resource_uri_.c_str());
                     if (monitor_enabled_) {
                         LOG_INFO("Start monitoring..");
-                        monitor_uri_ = "inproc://prakashq_";
+                        monitor_uri_ = "inproc://lightq_";
                         monitor_uri_.append(resource_uri_);
                         monitor_uri_.append("_");
                         monitor_uri_.append(std::to_string(fd_));
@@ -148,10 +148,10 @@ namespace lightq {
             LOG_IN("message:%s", message.c_str());
             try {
                  if(get_zmq_connect_type() == ZMQ_PUB) {
-                   s_sendmore(*p_socket_, topic_);
+                   s_sendmore(*p_socket_, topic_, true);
                  }
                 
-                if (s_send(*p_socket_, message)) {
+                if (s_send(*p_socket_, message, false)) {
                     total_bytes_written_ += message.length();
                     total_msg_written_ += 1;
                     LOG_RET("Successfully send message", message.length());
@@ -176,10 +176,10 @@ namespace lightq {
             LOG_IN("message:%p", message);
             try {
                  if(get_zmq_connect_type() == ZMQ_PUB) {
-                   s_sendmore(*p_socket_, topic_);
+                   s_sendmore(*p_socket_, topic_, true);
                  }
                 
-                if (s_send(*p_socket_, message, length)) {
+                if (s_send(*p_socket_, message, length, true)) {
                     total_bytes_written_ += length;
                     total_msg_written_ += 1;
                     LOG_RET("Successfully send message", length);
@@ -215,7 +215,7 @@ namespace lightq {
          * @return 
          */
         ssize_t read_msg(std::string& message) {
-            message.c_str();
+            message.clear();
             LOG_IN("message: %s", message.c_str());
             try {
                 
@@ -226,6 +226,7 @@ namespace lightq {
                 //                }
                 LOG_DEBUG("Received: size %d", message.size());
                 message.assign(static_cast<const char*> (message.data()), message.size());
+                LOG_TRACE("Received %s", message.c_str());
                 total_bytes_read_ += message.length();
                 ++total_msg_read_;
                 LOG_RET("", message.length());

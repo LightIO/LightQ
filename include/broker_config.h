@@ -23,6 +23,7 @@ namespace lightq {
             broker_queue,
             broker_file,
             broker_direct,
+            broker_queue_file
         };
         
         std::string id_;

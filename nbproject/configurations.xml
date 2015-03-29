@@ -38,10 +38,21 @@
                    displayName="Important Files"
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
-      <itemPath>PrakashQ-Makefile.mk</itemPath>
+      <itemPath>LightQ-Makefile.mk</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>LightQ-Makefile.mk</itemPath>
     </logicalFolder>
   </logicalFolder>
-  <projectmakefile>PrakashQ-Makefile.mk</projectmakefile>
+  <projectmakefile>LightQ-Makefile.mk</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
       <toolsSet>

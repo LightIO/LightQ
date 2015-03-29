@@ -275,6 +275,10 @@ namespace lightq {
                 broker_type = broker_config::broker_file;
             } else if (req.broker_type_ == "direct") {
                 broker_type = broker_config::broker_direct;
+            } else if (req.broker_type_ == "queue_file") {
+                broker_type = broker_config::broker_queue_file;
+            }else {
+                 broker_type = broker_config::broker_queue; //default
             }
             config.broker_type_ = broker_type;
             broker *pb = new broker(config);
@@ -350,6 +354,7 @@ namespace lightq {
                     }
                     if (it->second->get_producer()) {
                         resp.bind_uri_ = it->second->get_producer()->get_bind_uri();
+                        boost::replace_all(resp.bind_uri_, "*", "127.0.0.1"); //FIXME usenetwork interfacd
                         std::string resp_str = resp.to_json();
                         LOG_EVENT("Status response: %s", resp_str.c_str());
                         return reply_cmd(resp_str);
@@ -404,6 +409,7 @@ namespace lightq {
                     } else {
                         resp.bind_uri_ = it->second->get_consumer()->get_push_bind_uri();
                     }
+                    boost::replace_all(resp.bind_uri_, "*", "127.0.0.1");
                     std::string resp_str = resp.to_json();
                     LOG_EVENT("Status response: %s", resp_str.c_str());
                     return reply_cmd(resp_str);

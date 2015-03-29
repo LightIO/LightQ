@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="95">
-  <projectmakefile>PrakashQ-Makefile.mk</projectmakefile>
+  <projectmakefile>LightQ-Makefile.mk</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
       <toolsSet>

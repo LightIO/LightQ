@@ -111,7 +111,7 @@ namespace lightq {
                 bool write_message_size = true;
                 //if producer is socket, we expect producer to have message size included in the payload
                 if(p_producer_socket->get_stream_type() ==  connection::stream_socket) {
-                    write_message_size = false;
+                    write_message_size = true;
                 }
                 if (!p_storage_->add_to_storage(message, write_message_size)) {
                     LOG_RET_FALSE("failure");

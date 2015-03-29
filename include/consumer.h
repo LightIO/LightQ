@@ -116,8 +116,8 @@ namespace lightq {
                         consumer_endpoint_type_,
                         connection::bind_socket,
                         true);
-
-                if (!p_consumer_socket_->init()) {
+                connection_socket* psocket = (connection_socket*)p_consumer_socket_;
+                if (!psocket->init(p_storage_)) {
 
                     LOG_RET_FALSE(utils::format_str("Failed to initialize broker: %s, consumer_bind_uri: %s",
                             config_.id_.c_str(), config_.push_bind_uri_.c_str()).c_str());
@@ -177,17 +177,19 @@ namespace lightq {
                 bool result = false;
                 
                 //based on consumer socket type, either use send file or write buffer
-                if (p_storage_->get_broker_type() == broker_config::broker_file) {
+                if (p_storage_->get_broker_type() == broker_config::broker_file || 
+                        p_storage_->get_broker_type() == broker_config::broker_queue_file) {
                     if (p_consumer_socket_->get_stream_type() == connection::stream_type::stream_socket) {
                          connection_socket* psocket = (connection_socket*)p_consumer_socket_;
-                         while (p_storage_->get_file_total_bytes_written() < psocket->get_write_offset()) {
-                            s_sleep(100); //define magic number fixme
+                         while (p_storage_->get_file_total_bytes_written() < psocket->get_write_offset() + sizeof(uint32_t)) {
+                            s_sleep(10); //define magic number fixme
                         }
-                        result = p_storage_->sendfile_to_socket(p_consumer_socket_);
+                         LOG_DEBUG("Data are available for read");
+                        result = sendfile_to_socket();
                     
                     }else {
                         while (p_storage_->get_file_total_bytes_written()  <= p_storage_->get_total_bytes_read()  + sizeof(uint32_t)) {
-                            s_sleep(100); //define magic number fixme may be implement condition variabl
+                            s_sleep(10); //define magic number fixme may be implement condition variabl
                         }
                         LOG_TRACE("file_total_bytes_written[%lld], file_total_bytes_read[%lld]",
                                p_storage_->get_file_total_bytes_written(), p_storage_->get_total_bytes_read() );
@@ -197,7 +199,7 @@ namespace lightq {
 
                 } else if (p_storage_->get_broker_type() == broker_config::broker_queue) {
                      while (p_storage_->get_queue_size() <= 0 ) {
-                        s_sleep(3); //define magic number fixme
+                        s_sleep(10); //define magic number fixme
                     }
                     result = p_storage_->get_message_from_queue(message);
                     if (result > 0) {
@@ -230,6 +232,63 @@ namespace lightq {
             }
             LOG_OUT("");
         }
+        
+        /**
+         * send file to socket
+         * @param p_consumer_socket
+         * @return 
+         */
+        ssize_t sendfile_to_socket(uint32_t bytes_to_send=utils::max_msg_size) {
+            LOG_IN("");
+            ssize_t result = 0;
+            connection_socket* psocket = (connection_socket*) p_consumer_socket_;
+            int socket_fd = psocket->get_next_fd();
+            LOG_DEBUG("received socket fd: %d", socket_fd);
+            
+            uint32_t offset = psocket->get_write_offset();
+           
+            LOG_DEBUG("Write offset: %u", offset);
+            result = -1;
+            while (result < 0) {
+                result = p_storage_->get_file_connection()->send_file(socket_fd, offset, bytes_to_send);
+                if (result == -1) {
+                    LOG_ERROR("Failed to read file for socket fd:%d", socket_fd);
+                    psocket->remove_fd(socket_fd);
+                    break;
+                } else {
+                    LOG_DEBUG("Read %u bytes", result);
+                    psocket->set_write_offset(offset + result);
+                    p_storage_->add_total_bytes_read(result);
+                }
+            }
+            LOG_RET("", result);
+        }
+        
+        /**
+         * send file to socket
+         * @param p_consumer_socket
+         * @return 
+         */
+        ssize_t sendfile_to_socket(int socket_fd, uint32_t offset, uint32_t bytea_to_send=utils::max_msg_size) {
+            LOG_IN("socket_fd[%d], offset[%u], bytea_to_send[%u]",
+                    socket_fd, offset, bytea_to_send);
+            ssize_t result = 0;
+            connection_socket* psocket = (connection_socket*) p_consumer_socket_;  
+            result = -1;
+            while (result < 0) {
+                result = p_storage_->get_file_connection()->send_file(socket_fd, offset, bytea_to_send);
+                if (result == -1) {
+                    LOG_ERROR("Failed to read file for socket fd:%d", socket_fd);
+                    psocket->remove_fd(socket_fd);
+                    break;
+                } else {
+                    LOG_DEBUG("Read %u bytes", result);
+                    psocket->set_write_offset(offset + result);
+                    p_storage_->add_total_bytes_read(result);
+                }
+            }
+            LOG_RET("", result);
+        }
 
         /**
          * get_consumer_socket
@@ -255,8 +314,13 @@ namespace lightq {
         }
         unsigned get_num_pull_clients() {
             if(p_consumer_socket_) {
-                connection_zmq* psocket = (connection_zmq*) p_consumer_socket_;
-                return psocket->get_num_connected_clients();
+                if(config_.stream_type_ == connection::stream_zmq) {
+                    connection_zmq* psocket = (connection_zmq*) p_consumer_socket_;
+                    return psocket->get_num_connected_clients();
+                }else if(config_.stream_type_ == connection::stream_socket) {
+                    connection_socket* psocket = (connection_socket*) p_consumer_socket_;
+                    return psocket->get_total_connected_clients();
+                }
             }else {
                 return 0;
             }
