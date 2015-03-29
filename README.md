@@ -14,6 +14,7 @@ It is a high performance,  brokered messaging queue which supports transient (1M
 9. JSON protocol to create topic and join topic (at runtime)
 10. C++11 support/require
 11. Logging support
+12. Dynamic port allocation for topic, consumer, producer
 
 It is mostly header only project with main.cpp as an example for broker, producer and consumer.
 
