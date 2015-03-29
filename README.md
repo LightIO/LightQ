@@ -3,7 +3,7 @@
 It is a high performance,  brokered messaging queue which supports transient (1M msg/sec)  and durable (~300K msg/sec) queues. Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
 
 ###Features:
-1. Transient and durable queue (Similar to <B>Kafka</B>)
+1. Transient and durable queue (similar to <B>Kafka</B> where producer writes to the file, consumer reads from the file)
 2. Authentication per topic (userid/password validation)
 3. Header only project (Embed with your project) 
 4. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
