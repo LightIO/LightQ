@@ -91,7 +91,28 @@ NOTE: This is an initial version and may not be ready for production use.
       "status": "ok",
       "topic": "test"
     }
-    
+### Get the statistics about the topic
+
+    Request:
+    {
+       "cmd": "stats",
+       "password": "T0p$3cr31",
+       "topic": "test",
+       "user_id": "test_admin"
+    }
+    Response:
+    {
+      "cmd": "stats",
+      "messages_received": 9499570,
+      "messages_sent": 9491554,
+      "publishers_count": 0,
+      "queue_size": 8016,
+      "status": "ok",
+      "subscribers_count": 1,
+      "total_bytes_read": 0,
+      "total_bytes_written": 0
+   }
+   
 #Performance:
 
 Laptop hardware:
