@@ -19,7 +19,7 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
     
-#Performance: (transient)
+#Performance: (transient broker)
 ##100 bytes, 10M messages
 
 Producer:
@@ -101,7 +101,7 @@ Consumer:
     492.6617 MB per second.
     
     
-#Performance: (Durable: file)
+#Performance: (Durable broker: file)
 ##100 bytes, 10M messages
 
 Producer:
