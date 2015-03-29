@@ -19,20 +19,7 @@ It is mostly header only project with main.cpp as an example for broker, produce
 
 NOTE: This is an initial version and may not be ready for production use.
 
-###Example: (transient broker)
 
-Start Broker: (broker type:  queue, logging level: event)
-
-    ./dist/Release/GNU-MacOSX/lightq queue event
-  
-Start Consumer: (client: consumer,  broker type: queue, client socket: zmq, logging level: event)
-
-    ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
-    
-Start Producer:  (client: producer, number of messages 10M, payload size: 100 bytes, logging level: event)
-
-    ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
-    
  
 ##Protocol: 
 
@@ -271,7 +258,22 @@ Consumer:
     274071 messages per seconds.
     1024000004 bytes received
     267.6477 MB per second.
+
+###Example: (transient broker)
+
+Start Broker: (broker type:  queue, logging level: event)
+
+    ./dist/Release/GNU-MacOSX/lightq queue event
+  
+Start Consumer: (client: consumer,  broker type: queue, client socket: zmq, logging level: event)
+
+    ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
     
+Start Producer:  (client: producer, number of messages 10M, payload size: 100 bytes, logging level: event)
+
+    ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
+    
+        
 ##License
 
 (The MIT License)
