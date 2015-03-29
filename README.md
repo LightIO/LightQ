@@ -121,6 +121,26 @@ Consumer:
     1000000004 bytes received
     112.4907 MB per second.
     
+##100 bytes, 100M messages
+
+Producer:
+
+    ./dist/Release/GNU-MacOSX/lightq producer 100000000 100 event
+    Total Messages:10000000, Time Taken:8.52983 seconds.
+    Start Time: 1427670677135, End Time:1427670685665
+    1172356 messages per seconds.
+    1000000000 bytes sent
+    111.8046 MB per second.
+    
+Consumer:
+
+    ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
+    Total Messages:10000001, Time Taken:8.54086 seconds.
+    Start Time: 1427670677139, End Time:1427670685680
+    1170842 messages per seconds.
+    1000000004 bytes received
+    111.6602 MB per second.
+    
 ##256 bytes 10M Messages
 
 Producer:
@@ -140,6 +160,26 @@ Consumer:
     1074931 messages per seconds.
     2560000004 bytes received
     262.4345 MB per second.
+    
+##256 bytes 100M Messages
+
+Producer:
+
+    ./dist/Release/GNU-MacOSX/lightq producer 100000000 256 event
+    Total Messages:10000000, Time Taken:9.22366 seconds.
+    Start Time: 1427671010140, End Time:1427671019363
+    1084168 messages per seconds.
+    2560000000 bytes sent
+    264.6896 MB per second.
+    
+Consumer:
+
+    ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
+    Total Messages:10000001, Time Taken:9.24846 seconds.
+    Start Time: 1427671010144, End Time:1427671019393
+    1081260 messages per seconds.
+    2560000004 bytes received
+    263.9797 MB per second.
 
 ## 512 bytes 10M Messages
 
@@ -161,6 +201,26 @@ Consumer:
     5120000004 bytes received
     463.7239 MB per second.
     
+## 512 bytes 100M Messages
+
+Producer:
+
+    ./dist/Release/GNU-MacOSX/lightq producer 100000000 512 event
+    Total Messages:10000000, Time Taken:9.4038 seconds.
+    Start Time: 1427671108919, End Time:1427671118322
+    1063399 messages per seconds.
+    5120000000 bytes sent
+    519.2381 MB per second.
+    
+Consumer:
+
+    ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
+    Total Messages:10000001, Time Taken:9.42733 seconds.
+    Start Time: 1427671108928, End Time:1427671118355
+    1060745 messages per seconds.
+    5120000004 bytes received
+    517.9422 MB per second.
+    
 ## 1024 bytes 10M Messages
 
 Producer:
@@ -181,6 +241,25 @@ Consumer:
     10240000004 bytes received
     492.6617 MB per second.
     
+ ## 1024 bytes 100M Messages
+
+Producer:
+
+    ./dist/Release/GNU-MacOSX/lightq producer 100000000 1024 event
+    Total Messages:10000000, Time Taken:20.1682 seconds.
+    Start Time: 1427671196806, End Time:1427671216975
+    495831 messages per seconds.
+    10240000000 bytes sent
+    484.2100 MB per second.
+    
+Consumer:
+
+    ./dist/Release/GNU-MacOSX/lightq consumer queue zmq  pull event
+    Total Messages:10000001, Time Taken:20.1718 seconds.
+    Start Time: 1427671196814, End Time:1427671216986
+    495740 messages per seconds.
+    10240000004 bytes received
+    484.1217 MB per second.
     
 #Performance: (Durable broker: file)
 ##100 bytes, 10M messages
@@ -282,7 +361,7 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
 
 (The MIT License)
 
-Copyright (c) 2012-2014 Apcera Inc.
+Copyright (c) 2015 Joshi Ventures LLC.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
