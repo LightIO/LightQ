@@ -21,7 +21,15 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
     
-#Performance: (transient broker)
+#Performance:
+
+Laptop hardware:
+
+    MacBook Pro (Retina, 15-inch, Late 2013)
+    Processor 2.3 GHz Intel Core i7
+    Memory 16 GB 1600 MHz DDR3
+    
+Broker Type: Transient
 ##100 bytes, 10M messages
 
 Producer:
