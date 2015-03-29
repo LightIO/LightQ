@@ -48,7 +48,8 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     }
     
 
-###Join Topic (Consumer): (Need to pass userid/password for topic 'test')
+###Join Topic (Consumer):
+(Need to pass userid/password for topic 'test')
 
     Request:
     {
@@ -67,7 +68,8 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
        "topic": "test"
     }
  
-### Join Topic (Producer):  (Need to pass userid/password for topic 'test')
+### Join Topic (Producer): 
+(Need to pass userid/password for topic 'test')
 
     Request:
     {
