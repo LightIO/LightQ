@@ -2,7 +2,7 @@
 
 It is a high performance,  brokered messaging queue which supports transient (1M messages per second)  and durable (~300K messages per second) queues.  Durable queue are similar to Kafka model where data are written to the file and consumers consumes from the file.
 
-NOTE: This is first draft and is not optimized and bug free.
+NOTE: This is initial version and may not be ready for production use.
 
 ###Example: (transient broker)
 
