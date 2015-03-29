@@ -1,6 +1,8 @@
 # LightQ 
 
-It is a high performance,  brokered messaging queue which supports transient (1M messages per second)  and durable (~300K messages per second) queues.  Durable queue are similar to Kafka model where data are written to the file and consumers consumes from the file.
+It is a high performance,  brokered messaging queue which supports transient (1M msgs per second)  and durable (~300K msgs per second) queues.  Durable queue are similar to Kafka model where data are written to the file and consumers consumes from the file.
+
+It is mostly header only project with main.cpp as an example for broker, producer and consumer.
 
 NOTE: This is initial version and may not be ready for production use.
 
