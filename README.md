@@ -1,4 +1,6 @@
-# LightQ
+# LightQ is a high performance,  brokered messaging queue which supports transient and durable queues.  Durable queue are similar to Kafka model where data are written to the file and consumers consumes from the file.
+
+NOTE: This is first draft and is not optimized and bug free.
 
 Example: (transient broker)
 
