@@ -1,6 +1,16 @@
 # LightQ 
 
-It is a high performance,  brokered messaging queue which supports transient (1M msg/sec)  and durable (~300K msg/sec) queues.  Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
+It is a high performance,  brokered messaging queue which supports transient (1M msg/sec)  and durable (~300K msg/sec) queues. Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
+
+###Features:
+1. Transient queues using raw socket, ZeroMQ
+2. Durable queues using socket as consumers and file as storage (Similar to <B>Kafka</B>)
+3. Authentication per topic (userid/password validation)
+4. Header only project (Embed with your project) 
+5. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
+6. Consumer as Subscribers (Each consumer gets a copy of a message)
+7. JSON protocol to create topic and join topic (at runtime)
+8. C++11 support/require
 
 It is mostly header only project with main.cpp as an example for broker, producer and consumer.
 
