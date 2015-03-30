@@ -5,16 +5,16 @@ It is a high performance,  brokered messaging queue which supports transient (1M
 ###Features:
 1. Transient and durable queue (similar to <B>Kafka</B> where producer writes to the file, consumer reads from the file)
 2. Authentication per topic (userid/password validation)
-3. Header only project (Embed with your project) 
+3. Header only project (embed within your project) 
 4. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
 5. Consumer as Subscribers (Each consumer gets a copy of a message)
 6. Both subscriber and pipelining mode are supported for a single topic
-7. Multi Producers/Consumers for single topic
-8. Unlimited topics
+7. Multi Producers/Consumers for a single topic
+8. Unlimited* topics per broker
 9. JSON protocol to create topic and join topic (at runtime)
 10. C++11 support/require
 11. Logging support
-12. Dynamic port allocation for topic, consumer, producer
+12. Dynamic port allocation for topic and consumer/producer bind uri
 13. Cluster support (todo)
 14. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
 
