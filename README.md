@@ -290,6 +290,7 @@ Consumer:
     1024000004 bytes received
     267.6477 MB per second.
 
+Performance Test with 100M messages: https://github.com/rohitjoshi/LightQ/blob/master/PerfTest100M.md
 ###Example: (transient broker)
 
 Start Broker: (broker type:  queue, logging level: event)
