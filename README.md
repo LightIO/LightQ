@@ -309,7 +309,9 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
         
 ##License :
 Source code of LighQ: [Apache License](https://github.com/rohitjoshi/LightQ/blob/master/LICENSE)
+
 Dependecies:
+
  [ZeroMQ LGPL](http://zeromq.org/area:licensing) 
 
 
