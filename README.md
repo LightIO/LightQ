@@ -307,6 +307,9 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
         
-##License : [Apache License](https://github.com/rohitjoshi/LightQ/blob/master/LICENSE)
+##License :
+Source code of LighQ: [Apache License](https://github.com/rohitjoshi/LightQ/blob/master/LICENSE)
+Dependecies:
+ [ZeroMQ LGPL](http://zeromq.org/area:licensing) 
 
 
