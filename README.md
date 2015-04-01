@@ -105,7 +105,7 @@ NOTE: This is an initial version and may not be ready for production use.
       "cmd": "stats",
       "messages_received": 9499570,
       "messages_sent": 9491554,
-      "publishers_count": 0,
+      "publishers_count": 1,
       "queue_size": 8016,
       "status": "ok",
       "subscribers_count": 1,
