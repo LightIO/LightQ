@@ -250,45 +250,45 @@ Consumer:
     2560000004 bytes received
     85.9834 MB per second.
 
-## 512 bytes 1M Messages
+## 512 bytes 10M Messages
 
 Producer:
 
-    ./dist/Release/GNU-MacOSX/lightq producer 1000000 512 event
-    Total Messages:1000000, Time Taken:3.11399 seconds.
-    Start Time: 1427659753024, End Time:1427659756138
-    321131 messages per seconds.
-    512000000 bytes sent
-    156.8026 MB per second.
+    ./dist/Release/GNU-MacOSX/lightq producer 10000000 512 event
+    Total Messages:10000000, Time Taken:31.0832 seconds.
+    Start Time: 1427890737326, End Time:1427890768409
+    321716 messages per seconds.
+    5120000000 bytes sent
+    157.0884 MB per second.
     
 Consumer:
 
     ./dist/Release/GNU-MacOSX/lightq consumer file socket  pull event
-    Total Messages:1000001, Time Taken:3.12513 seconds.
-    Start Time: 1427659753031, End Time:1427659756156
-    319987 messages per seconds.
-    512000004 bytes received
-    156.2437 MB per second.
+    Total Messages:10000001, Time Taken:31.0935 seconds.
+    Start Time: 1427890737329, End Time:1427890768423
+    321610 messages per seconds.
+    5120000004 bytes received
+    157.0363 MB per second.
     
-## 1024 bytes 1M Messages
+## 1024 bytes 10M Messages
 
 Producer:
 
-    ./dist/Release/GNU-MacOSX/lightq producer 1000000 1024 event
-    Total Messages:1000000, Time Taken:3.63717 seconds.
-    Start Time: 1427659848032, End Time:1427659851669
-    274938 messages per seconds.
-    1024000000 bytes sent
-    268.4949 MB per second.
+    ./dist/Release/GNU-MacOSX/lightq producer 10000000 1024 event
+    Total Messages:10000000, Time Taken:37.4027 seconds.
+    Start Time: 1427890878446, End Time:1427890915848
+    267360 messages per seconds.
+    10240000000 bytes sent
+    261.0942 MB per second.
     
 Consumer:
 
     ./dist/Release/GNU-MacOSX/lightq consumer file socket  pull event
-    Total Messages:1000001, Time Taken:3.64869 seconds.
-    Start Time: 1427659848036, End Time:1427659851685
-    274071 messages per seconds.
-    1024000004 bytes received
-    267.6477 MB per second.
+    Total Messages:10000001, Time Taken:37.4166 seconds.
+    Start Time: 1427890878455, End Time:1427890915871
+    267260 messages per seconds.
+    10240000004 bytes received
+    260.9970 MB per second.
 
 Performance Test with 100M messages: https://github.com/rohitjoshi/LightQ/blob/master/PerfTest100M.md
 ###Example: (transient broker)
