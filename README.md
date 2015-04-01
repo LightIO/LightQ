@@ -15,8 +15,9 @@ It is a high performance,  brokered messaging queue which supports transient (1M
 10. C++11 support/require
 11. Logging support
 12. Dynamic port allocation for topic and consumer/producer bind uri
-13. Cluster support (todo)
-14. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
+13. Apache License
+14. Cluster support (todo)
+15. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
 
 
 It is mostly header only project with main.cpp as an example for broker, producer and consumer.
@@ -306,14 +307,6 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
         
-##License
+##License : https://github.com/rohitjoshi/LightQ/blob/master/LICENSE
 
-(The MIT License)
 
-Copyright (c) 2015 Joshi Ventures LLC.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
