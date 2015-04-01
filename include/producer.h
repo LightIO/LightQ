@@ -62,7 +62,7 @@ namespace lightq {
                         connection::endpoint_type::conn_publisher, 
                         connection_zmq::zmq_pull,
                         config_.producer_socket_connect_type_,
-                        true, false);           
+                        true, true);           
                // connection_zmq* p_zmq_producer = (connection_zmq*)p_producer_socket;
                 if (!p_producer_socket->init()) {
 
