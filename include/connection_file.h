@@ -80,14 +80,12 @@ namespace lightq {
             LOG_IN("");
             close_all();
             for (unsigned i = 0; i < file_fds_.size(); ++i) {
-                if (file_fds_[i]) {
-                    delete file_fds_[i];
-                    file_fds_[i] = NULL;
-                }
+                file_fds_[i]->close();
+                delete file_fds_[i];
             }
             LOG_OUT("");
         }
-
+        
         /**
          * get total bytes written
          * NOTE: you can use this and increment.  It is returned as integer value
@@ -126,27 +124,32 @@ namespace lightq {
          * @param ntohl
          * @return 
          */
-        ssize_t read(char* buffer, unsigned size_of_buffer, uint64_t offset, bool ntohl = false) {
-            LOG_IN("buffer: %p, size_of_buffer :%u, offset:%lld, ntohl: %d",
+        ssize_t read(char* buffer, uint32_t size_of_buffer, uint64_t offset, bool ntohl = false) {
+            LOG_IN("buffer: %p, size_of_buffer :%u, offset:%llu, ntohl: %d",
                     buffer, size_of_buffer, offset, ntohl);
             if(file_fds_.size() == 0) {
                 LOG_DEBUG("No data available to read. try later");
                 LOG_RET("Try again", 0);
             }
+             LOG_EVENT("Reading from file offset[%llu]", offset);
             uint64_t offset_currentfile = offset;
             for (unsigned i = 0; i < file_fds_.size(); ++i) {
-                if (file_fds_[i]->offset_across_all_files_ <= offset) {
-                    offset_currentfile -= file_fds_[i]->offset_across_all_files_;
+                if (offset >= file_fds_[i]->bytes_written_across_all_files_) {  
+                   
+                //    offset_currentfile -= file_fds_[i]->bytes_written_across_all_files_;
+                    LOG_ERROR("Skipping the fd index [%d], offset_currentfile[%llu]", i, offset_currentfile);
                     continue; //offset is larger than total bytes written to this file. move to next
-
                 }
-                LOG_TRACE("reading from offset: %lld", offset_currentfile);
+                if(i > 0) {
+                   offset_currentfile -= file_fds_[i -1]->bytes_written_across_all_files_;
+                }
+                LOG_TRACE("reading from offset: %llu", offset_currentfile);
                 //FIXME: calculate per file offset from global read offset
                 ssize_t bytes_read = file_fds_[i]->read_msg(buffer, size_of_buffer, offset_currentfile, ntohl);
                 if (bytes_read > 0) {
                     LOG_TRACE("Message read with size: %d", bytes_read);
                     LOG_RET("Success", bytes_read);
-                }
+                }                
             }
             LOG_RET("Error", -1);
         }
@@ -167,7 +170,7 @@ namespace lightq {
             if (bytes_written > 0) {
                 msg_counter_++;
                 total_bytes_writen_ += bytes_written;
-                file_fds_[current_fd_index_]->offset_across_all_files_ = total_bytes_writen_;
+                file_fds_[current_fd_index_]->bytes_written_across_all_files_ = total_bytes_writen_;
                 LOG_RET("Success: ", bytes_written);
             }
              LOG_RET("Error: ", bytes_written);
@@ -186,7 +189,7 @@ namespace lightq {
             if (bytes_written > 0) {
                 msg_counter_++;
                 total_bytes_writen_ += bytes_written;
-                file_fds_[current_fd_index_]->offset_across_all_files_ = total_bytes_writen_;
+                file_fds_[current_fd_index_]->bytes_written_across_all_files_ = total_bytes_writen_;
                 LOG_RET("Success: ", bytes_written);
             }
              LOG_RET("Error: ", bytes_written);
@@ -218,16 +221,22 @@ namespace lightq {
          * @return 
          */
         ssize_t send_file(int fd, uint64_t offset, uint32_t size) {
-            LOG_IN("fd[%d], offset[%u], size[%u]", fd, offset, size);
-            uint64_t offset_currentfile = offset;
+            LOG_IN("fd[%d], offset[%u], size[%u]", fd, offset, size);  
+            if(offset >= (unsigned long long) total_bytes_writen_) {
+                LOG_RET("No data to read ", 0);
+            }            
+            uint64_t offset_currentfile = offset;           
             for (unsigned i = 0; i < file_fds_.size(); ++i) {
-                LOG_DEBUG("file_fds_[i]->offset_across_all_files_[%lld], offset[%u]", file_fds_[i]->offset_across_all_files_, offset);
-                if (file_fds_[i]->offset_across_all_files_ <= offset) {
-                      offset_currentfile -= file_fds_[i]->offset_across_all_files_;
-                    LOG_DEBUG("Skipping the fd index [%d]", i);
+                LOG_DEBUG("file_fds_[%d]->offset_across_all_files_[%llu], offset[%llu]", i,file_fds_[i]->bytes_written_across_all_files_, offset);
+                if (offset >= file_fds_[i]->bytes_written_across_all_files_) {  
+                //    offset_currentfile -= file_fds_[i]->bytes_written_across_all_files_;
+                    LOG_DEBUG("Skipping the fd index [%d], offset_currentfile[%llu]", i, offset_currentfile);
                     continue; //offset is larger than total bytes written to this file. move to next
                 }
-                LOG_DEBUG("Sending file from offset %u for size %u ", offset_currentfile, size);
+                if(i > 0) {
+                   offset_currentfile -= file_fds_[i -1]->bytes_written_across_all_files_;
+                }
+                LOG_DEBUG("Sending file from offset %llu for size %llu ", offset_currentfile, size);
                 ssize_t bytes_read = file_fds_[i]->send_file(fd, offset_currentfile, size);
                 if (bytes_read > 0) {
                     
@@ -240,7 +249,7 @@ namespace lightq {
         }
         
         ssize_t read_msg(const char* message, uint64_t offset, bool ntohl=false) {
-             LOG_IN("offset [%lld]", offset);
+             LOG_IN("offset [%llu]", offset);
            
              ssize_t bytes_read = read(buffer, utils::max_msg_size, offset, ntohl);
            //  message.append(buffer, bytes_read);
@@ -308,7 +317,7 @@ namespace lightq {
                 file_details *pInfo = new file_details();
                 LOG_DEBUG("Creating a file");
                 if (pInfo->create_file(directory_,topic_, current_fd_index_)) {
-                    LOG_DEBUG("File created successfully");
+                    LOG_DEBUG("File created successfully");                   
                     file_fds_.push_back(pInfo);
                     LOG_RET_TRUE("Success");
                 }else {
@@ -321,8 +330,9 @@ namespace lightq {
             LOG_INFO("fd_to_use: %d, current_fd_index_:% u ", fd_to_use, current_fd_index_);
             if (fd_to_use > current_fd_index_) {
                 LOG_INFO("fd_to_use: %d", fd_to_use);
-                file_fds_[current_fd_index_]->offset_across_all_files_ = total_bytes_writen_;
+                file_fds_[current_fd_index_]->bytes_written_across_all_files_ = total_bytes_writen_;
                 // file_fds_[current_fd_index_]->close(); we need to provide support to read
+               file_fds_[current_fd_index_]->flush();
 
                 current_fd_index_ = fd_to_use;
                 file_details *pInfo = new file_details();

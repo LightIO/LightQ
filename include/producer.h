@@ -44,10 +44,8 @@ namespace lightq {
             if (producer_tid_.joinable())
                 producer_tid_.join();
 
-            if (p_producer_socket) {
-                delete p_producer_socket;
-                p_producer_socket = NULL;
-            }
+            delete p_producer_socket;
+            
 
             LOG_OUT("");
         }

@@ -76,11 +76,10 @@ namespace lightq {
                 monitor_thread_.join();
             }
 
-            if (p_socket_) {
-                LOG_DEBUG("Delete p_socket");
-                delete p_socket_;
-                p_socket_ = NULL;
-            }
+            
+            LOG_DEBUG("Delete p_socket");
+            delete p_socket_;
+           
             LOG_OUT("");
         }
 

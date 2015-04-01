@@ -89,7 +89,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
     stat_req.user_id_ = "test_admin";
     stat_req.topic_ = "test";
     while (true) {
-        
+
         size = admin_socket.write_msg(stat_req.to_json());
         if (size <= 0) {
             LOG_ERROR("Failed to request for stats");
@@ -106,16 +106,16 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             LOG_ERROR("Failed to get stat response. response %s", response.c_str());
             return;
         }
-        if(resp.subscribers_count_ > 0) {
-            LOG_DEBUG("Number of subscribers [%lld]", resp.subscribers_count_ );
+        if (resp.subscribers_count_ > 0) {
+            LOG_DEBUG("Number of subscribers [%lld]", resp.subscribers_count_);
             break;
-        }else {
+        } else {
             LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
             s_sleep(1000); //wait 1 sec
         }
     }
 
-    
+
     uint32_t last_queue_size = 0;
     for (uint64_t i = 0; i < counter; i++) {
         result = push_socket.write_msg(message);
@@ -131,7 +131,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             std::string response;
             admin_socket.read_msg(response);
             LOG_EVENT("Stats :%s ", response.c_str());
-           // LOG_DEBUG("Stats :%s ", response.c_str());
+            // LOG_DEBUG("Stats :%s ", response.c_str());
             std::cout << "Stats : " << response << std::endl;
             admin_cmd::stats_resp resp;
             resp.from_json(response);
@@ -139,15 +139,15 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
                 LOG_ERROR("Failed to get stat response. response %s", response.c_str());
                 continue;
             }
-            if(resp.queue_size_ > 10000) {
+            if (resp.queue_size_ > 10000) {
                 LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
-                s_sleep(resp.queue_size_/1000); 
-            }else if(last_queue_size < resp.queue_size_) {
-                s_sleep((resp.queue_size_ - last_queue_size)/100);
+                s_sleep(resp.queue_size_ / 1000);
+            } else if (last_queue_size < resp.queue_size_) {
+                s_sleep((resp.queue_size_ - last_queue_size) / 100);
             }
             last_queue_size = resp.queue_size_;
-            
-            
+
+
         }
     }
     push_socket.write_msg("STOP");
@@ -171,16 +171,16 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
 
     while (true) {
         ssize_t size = 0;
-            size = admin_socket.write_msg(stat_req.to_json());
-            if (size <= 0) {
-                LOG_ERROR("Failed to request for stats");
-                return;
-            }
-            std::string response;
-            admin_socket.read_msg(response);
-            LOG_EVENT("Stats :%s ", response.c_str());
-            LOG_DEBUG("Stats :%s ", response.c_str());
-            std::cout << "Stats : " << response << std::endl;
+        size = admin_socket.write_msg(stat_req.to_json());
+        if (size <= 0) {
+            LOG_ERROR("Failed to request for stats");
+            return;
+        }
+        std::string response;
+        admin_socket.read_msg(response);
+        LOG_EVENT("Stats :%s ", response.c_str());
+        LOG_DEBUG("Stats :%s ", response.c_str());
+        std::cout << "Stats : " << response << std::endl;
         sleep(10);
     }
 
@@ -225,120 +225,136 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
     }
     LOG_INFO("Login success");
 
-   
-        std::string uri = resp.bind_uri_;
 
-        boost::replace_all(uri, "*", "127.0.0.1");
-        connection *p_pull_socket = NULL;
-        if (socket_type == "socket") {
-            p_pull_socket = new connection_socket(resp.topic_, uri, connection::conn_consumer, connection::connect_socket, false);
-            if (!((connection_socket*) p_pull_socket)->init()) {
-                LOG_ERROR("Failed to initialize consumer pull connection");
-                return;
-            }
-        } else {
-            if (sub_mod == "pull") {
-                std::cout << "Connecting using pull" << std::endl;
-                p_pull_socket = new connection_zmq(resp.topic_, uri, connection::conn_consumer,
-                        connection_zmq::zmq_pull, connection::connect_socket, false, false);
-            } else {
-                p_pull_socket = new connection_zmq(resp.topic_, uri, connection::conn_consumer,
-                        connection_zmq::zmq_sub, connection::connect_socket, false, false);
-                // p_pull_socket..setsockopt(ZMQ_SUBSCRIBE, "", 0);
-                std::cout << "Connecting using sub to topic:" << resp.topic_ << std::endl;
-            }
-            if (!p_pull_socket->init()) {
-                LOG_ERROR("Failed to initialize consumer pull connection");
-                return;
-            }
+    std::string uri = resp.bind_uri_;
+
+    boost::replace_all(uri, "*", "127.0.0.1");
+    connection *p_pull_socket = NULL;
+    if (socket_type == "socket") {
+        p_pull_socket = new connection_socket(resp.topic_, uri, connection::conn_consumer, connection::connect_socket, false);
+        if (!((connection_socket*) p_pull_socket)->init()) {
+            LOG_ERROR("Failed to initialize consumer pull connection");
+            return;
         }
-        //  std::cout << "Waiting for 10 seconds" << std::endl;
-        sleep(1); //wait for successful connection
-        std::string message;
-        uint64_t counter = 0;
-        high_resolution_clock::time_point t1;
-        ssize_t result = 0;
-        uint32_t offset = 0;
-        uint64_t num_bytes_received = 0;
-        char buffer[utils::max_msg_size];
-        while (true) {
-            if (socket_type == "socket") {
+    } else {
+        if (sub_mod == "pull") {
+            std::cout << "Connecting using pull" << std::endl;
+            p_pull_socket = new connection_zmq(resp.topic_, uri, connection::conn_consumer,
+                    connection_zmq::zmq_pull, connection::connect_socket, false, false);
+        } else {
+            p_pull_socket = new connection_zmq(resp.topic_, uri, connection::conn_consumer,
+                    connection_zmq::zmq_sub, connection::connect_socket, false, false);
+            // p_pull_socket..setsockopt(ZMQ_SUBSCRIBE, "", 0);
+            std::cout << "Connecting using sub to topic:" << resp.topic_ << std::endl;
+        }
+        if (!p_pull_socket->init()) {
+            LOG_ERROR("Failed to initialize consumer pull connection");
+            return;
+        }
+    }
+    //  std::cout << "Waiting for 10 seconds" << std::endl;
+    sleep(1); //wait for successful connection
+    std::string message;
+    message.reserve(utils::max_msg_size);
+    uint64_t counter = 0;
+    high_resolution_clock::time_point t1;
+    ssize_t result = 0;
+    uint64_t offset = 0;
+    uint64_t num_bytes_received = 0;
+    char buffer[utils::max_msg_size];
+    bool socket_type_socket = false;
+    if (socket_type == "socket") {
+            socket_type_socket = true;
+    }
+    bool use_buffer = true;
+    while (true) {
+        if (socket_type_socket) {
+           
 
-                connection_socket *p_conn_sock = (connection_socket*) p_pull_socket;
-//                ssize_t off_sent = p_conn_sock->send_offset(offset);
-//                if (off_sent <= 0) {
-//                    s_sleep(5);
-//                    LOG_DEBUG("offset sent size: %u", off_sent);
-//                    continue;
-//                }
-                result = 0;
-                while (result <= 0) {
-                    buffer[0] = '\0';
-                    if ((result = p_conn_sock->read_msg(buffer, utils::max_msg_size, false)) < 0) {
-                        LOG_ERROR("Failed to read message");
-                    } else if (result == 0) {
-                        //  LOG_ERROR("timeout.reting after 1 ms");
-                        s_sleep(5);
-                    }
-                    buffer[result] = '\0'; //remove last 4 bytes which is offset
-                   
-                }
-            } else {
-                //// while(result < )
-                if ((result = ((connection_zmq*) p_pull_socket)->read_msg(message)) < 0) {
+            connection_socket *p_conn_sock = (connection_socket*) p_pull_socket;
+            //                ssize_t off_sent = p_conn_sock->send_offset(offset);
+            //                if (off_sent <= 0) {
+            //                    s_sleep(5);
+            //                    LOG_DEBUG("offset sent size: %u", off_sent);
+            //                    continue;
+            //                }
+            result = 0;
+            while (result <= 0) {
+                buffer[0] = '\0';
+               //  if ((result = p_conn_sock->read_msg(message, false)) < 0) {
+                if ((result = p_conn_sock->read_msg(buffer, utils::max_msg_size, false)) < 0) {
                     LOG_ERROR("Failed to read message");
+                    std::cout << "Failed to read message" << std::endl;
+                    continue;
                 } else if (result == 0) {
                     //  LOG_ERROR("timeout.reting after 1 ms");
-                    s_sleep(1);
+                    s_sleep(5);
                 }
-            }
-            
-            unsigned msg_length = 0;
-            if(socket_type == "socket") {
-                msg_length = strlen(buffer);
-            }else {
-                msg_length = message.length();
-            }
-            LOG_TRACE("Received length: %u", msg_length);
+                if(use_buffer)
+                    buffer[result] = '\0'; //remove last 4 bytes which is offset
 
-            ++counter;
-            offset += result; //FIXME: read offset from payload
-            num_bytes_received += result;
-            if (counter == 1) {
-                t1 = high_resolution_clock::now();
             }
-            if (msg_length) {
-                if(socket_type == "socket") {
-                 LOG_TRACE("Received %s", buffer);
-                  if (msg_length == 4 && std::strstr(buffer,"STOP")) {
-                    break;
-                }else if (msg_length == 8 && std::strstr(buffer,"STOP")) {
-                    break;
-                }
-                }else {
-                LOG_TRACE("Received: %s", message.c_str());
-                 if (msg_length == 4 && std::strstr(message.c_str(),"STOP")) {
-                break;
-            }else if (msg_length == 8 && std::strstr(message.c_str(),"STOP")) {
-                break;
+        } else {
+            //// while(result < )
+            if ((result = ((connection_zmq*) p_pull_socket)->read_msg(message)) < 0) {
+                LOG_ERROR("Failed to read message");
+                continue;
+            } else if (result == 0) {
+                //  LOG_ERROR("timeout.reting after 1 ms");
+                s_sleep(1);
             }
-                }
-            }
-           
         }
+
+        unsigned msg_length = 0;
+        if (use_buffer) {
+            msg_length = strlen(buffer);
+        } else {
+            msg_length = message.length();
+        }
+        LOG_TRACE("Received length: %u", msg_length);
+
+        ++counter;
+        offset += result; //FIXME: read offset from payload
+        num_bytes_received += result;
+        if (counter == 1) {
+            t1 = high_resolution_clock::now();
+        }
+       // if(num_bytes_received > 2560000000) {
+       //     std::cout << " message:" << message<< std::endl;
+       // }
         
-        high_resolution_clock::time_point t2 = high_resolution_clock::now();
-        
-        std::cout.unsetf(ios::hex);
-        duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
-        std::cout << "Total Messages:" << counter << ", Time Taken:" << time_span.count() << " seconds." << std::endl;
-        std::cout << "Start Time: " << utils::get_currenttime_milliseconds(t1)
-                << ", End Time:" << utils::get_currenttime_milliseconds(t2) << std::endl;
-        std::cout << (uint64_t) (counter / time_span.count()) << " messages per seconds." << std::endl;
-        std::cout << num_bytes_received << " bytes received" << std::endl;
-        std::cout << std::fixed << std::setprecision(4) << num_bytes_received / (1024 * 1024 * time_span.count()) << " MB per second." << std::endl;
-        delete p_pull_socket;
-    
+        if (msg_length) {
+            if (use_buffer) {
+                LOG_TRACE("Received %s", buffer);
+                if (msg_length == 4 && std::strstr(buffer, "STOP")) {
+                    break;
+                } else if (msg_length == 8 && std::strstr(buffer, "STOP")) {
+                    break;
+                }
+            } else {
+                LOG_TRACE("Received: %s", message.c_str());
+                if (msg_length == 4 && std::strstr(message.c_str(), "STOP")) {
+                    break;
+                } else if (msg_length == 8 && std::strstr(message.c_str(), "STOP")) {
+                    break;
+                }
+            }
+        }
+
+    }
+
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+    std::cout.unsetf(ios::hex);
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    std::cout << "Total Messages:" << counter << ", Time Taken:" << time_span.count() << " seconds." << std::endl;
+    std::cout << "Start Time: " << utils::get_currenttime_milliseconds(t1)
+            << ", End Time:" << utils::get_currenttime_milliseconds(t2) << std::endl;
+    std::cout << (uint64_t) (counter / time_span.count()) << " messages per seconds." << std::endl;
+    std::cout << num_bytes_received << " bytes received" << std::endl;
+    std::cout << std::fixed << std::setprecision(4) << num_bytes_received / (1024 * 1024 * time_span.count()) << " MB per second." << std::endl;
+    delete p_pull_socket;
+
 
     sleep(50000);
     LOG_OUT("");
@@ -438,16 +454,16 @@ int main(int argc, char** argv) {
         std::thread t = std::thread([&] {
             mgr.run();
         });
-       
+
         connection_zmq admin_socket("lightq_topic", "tcp://127.0.0.1:5000",
-            connection::conn_publisher,
-            connection_zmq::zmq_req,
-            connection::connect_socket,
-            false,
-            false);
+                connection::conn_publisher,
+                connection_zmq::zmq_req,
+                connection::connect_socket,
+                false,
+                false);
         if (!admin_socket.init() && admin_socket.run()) {
             LOG_ERROR("Failed to initialize producer for admin connection");
-            return 0 ;
+            return 0;
         }
         admin_cmd::create_topic_req req;
         req.admin_password_ = "T0p$3cr31";
@@ -464,13 +480,13 @@ int main(int argc, char** argv) {
             return 0;
         }
         admin_socket.read_msg(response);
-         LOG_INFO("topic creation response :%s ", response.c_str());
-         
-         t.join();
-        
+        LOG_INFO("topic creation response :%s ", response.c_str());
+
+        t.join();
+
     }
-       
-    
+
+
     return 0;
 }
 

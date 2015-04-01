@@ -28,7 +28,7 @@ namespace lightq {
             offset_ = 0;
             write_counter_ = 0;
             fd_ = -1;
-            offset_across_all_files_ = 0;
+            bytes_written_across_all_files_ = 0;
             LOG_OUT("");
         }
 
@@ -51,8 +51,8 @@ namespace lightq {
          * @param ntohl
          * @return 
          */
-        ssize_t read_msg(char* buffer, int buf_size, uint32_t offset, bool ntohl) {
-            LOG_IN("%s", utils::format_str("buffer: %p, buf_Size: %d, offset: %lld ntohl: %d", buffer, buf_size, offset, ntohl).c_str());
+        ssize_t read_msg(char* buffer, uint32_t buf_size, uint64_t offset, bool ntohl) {
+            LOG_IN("%s", utils::format_str("buffer: %p, buf_Size: %d, offset: %llu ntohl: %d", buffer, buf_size, offset, ntohl).c_str());
             
             unsigned size_of_int = sizeof (unsigned);
             ssize_t size = read_buffer_length(buffer, buf_size, offset, ntohl);
@@ -84,25 +84,35 @@ namespace lightq {
          * @param size
          * @return 
          */
-        ssize_t send_file(int socket, uint64_t offset, uint32_t size) {
-            LOG_IN("socket[%d], offset[%lld],  size[%u]", socket, offset, size);
-            LOG_DEBUG("Current file offset[ %lld]", offset_);
+        ssize_t send_file(int socket, uint64_t offset, uint64_t size) {
+            LOG_IN("socket[%d], offset[%llu],  size[%u]", socket, offset, size);
+            LOG_DEBUG("Reading %llu  bytes from offset[%llu]", size, offset);
+            LOG_DEBUG("Current file offset[ %llu]", offset_);
+            if(size > utils::max_msg_size) {
+                size = utils::max_msg_size;
+            }
             if(size + offset > offset_) {
                 size = offset_ - offset;
-                LOG_DEBUG("offset [ %lld] + size[%lld] > offset_[%lld]. Setting size as offset_ - offset[%lld] ",
+                LOG_DEBUG("offset [ %llu] + size[%llu] > offset_[%llu]. Setting size as offset_ - offset[%llu] ",
                         offset, size, offset_, size);
             }
+            LOG_DEBUG("Reading %llu  bytes from offset[%llu]", size, offset);
             if(size <= 0) {
                 LOG_DEBUG("size to read is zero. returning");
                 LOG_RET("no read", size);
             }
+           
+            
+            
  #ifdef __APPLE__
             off_t size_offset = size;
-            LOG_DEBUG("Reading %lld  bytes from offset[%lld]", size, offset);
+            LOG_DEBUG("Reading %llu  bytes from offset[%llu]", size, offset);
            ssize_t result =  sendfile(fd_, socket, offset, &size_offset, NULL, 0);
            if(result == 0 || result == EAGAIN) {
+               LOG_DEBUG("Sendfile success, Read number of bytes [%u]", size_offset)
                LOG_RET("success", size_offset);
            }  
+           LOG_DEBUG("Reading %llu  bytes from offset[%llu]", size, offset);
            LOG_ERROR("Failed to sendfile. Current fd[%d], socket_fd[%d], errnum[%d] error_desc[%s]",
                    fd_, socket, result, strerror(result));
            LOG_RET("failed", -1);
@@ -208,6 +218,22 @@ namespace lightq {
             fdatasync(f.fd_);
 #endif
             ::close(fd_);
+            fd_ = -1;
+            LOG_EVENT("File[%s] is closed", file_name_.c_str());
+            LOG_OUT("");
+        }
+        
+         /**
+         * Flush file descriptor
+         */
+        void flush() {
+            LOG_IN("")
+#ifdef __APPLE__
+            fsync(fd_);
+#else
+            fdatasync(f.fd_);
+#endif
+            LOG_EVENT("File[%s] is flushed to disk", file_name_.c_str());
             LOG_OUT("");
         }
 
@@ -217,9 +243,9 @@ namespace lightq {
         int fd_;
         //this track offset for total bytes written across all the files
         //e.g if 9 bytes written across 3 files, first fd_details will have 3, 2nd will have 6 and 3rd will have 9
-        uint64_t offset_across_all_files_; 
+        uint64_t bytes_written_across_all_files_; 
         std::string file_name_;
-        uint32_t offset_;
+        uint64_t offset_;
         uint32_t write_counter_;
 
         /**
@@ -304,7 +330,7 @@ namespace lightq {
          * @return 
          */
         ssize_t read_buffer_length(char* buffer, int buf_size, uint64_t offset, bool ntohl) {
-            LOG_IN("buffer: %p, buf_size: %d, offset: %lld, ntohl: %d", buffer, buf_size, offset, ntohl);
+            LOG_IN("buffer: %p, buf_size: %d, offset: %llu, ntohl: %d", buffer, buf_size, offset, ntohl);
             ssize_t result = 0;
             unsigned bytestoRead = sizeof (unsigned);
             unsigned bytesRead = 0;
@@ -313,8 +339,8 @@ namespace lightq {
                  result = pread(fd_, buffer + bytesRead, bytestoRead, offset);
                 if (result < 1) {
                     LOG_ERROR("Failed to read length of the message");
-                    LOG_ERROR("offset_across_all_files_[%lld], file offset[%lld]", offset_across_all_files_, offset_);
-                    LOG_ERROR("buffer: %p, buf_size: %d, offset: %lld, ntohl: %d", buffer, buf_size, offset, ntohl);
+                    LOG_ERROR("offset_across_all_files_[%llu], file offset[%llu]", bytes_written_across_all_files_, offset_);
+                    LOG_ERROR("buffer: %p, buf_size: %d, offset: %llu, ntohl: %d", buffer, buf_size, offset, ntohl);
                     LOG_RET("Error:", -1);
                 }
                 bytestoRead -= result;
@@ -344,8 +370,8 @@ namespace lightq {
          * @param offset
          * @return 
          */
-        ssize_t read_buffer(char* buffer, int buf_size, int length, uint32_t offset) {
-            LOG_IN("buffer: %p, buf_size: %d, length: %d, offset: %u", buffer, buf_size, length, offset);
+        ssize_t read_buffer(char* buffer, int buf_size, int length, uint64_t offset) {
+            LOG_IN("buffer: %p, buf_size: %d, length: %d, offset: %llu", buffer, buf_size, length, offset);
             ssize_t result = 0;
             unsigned bytestoRead = length;
             unsigned bytesRead = 0;

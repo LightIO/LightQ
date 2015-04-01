@@ -30,14 +30,11 @@ namespace lightq {
             if(queue_to_file_thread_.joinable()) {
                 queue_to_file_thread_.join();
             }
-            if(p_consumer_socket_) {
-                delete p_consumer_socket_;
-                p_consumer_socket_ = NULL;
-            }
-            if(p_file) {
-                delete p_file;
-                p_file = NULL;
-            }
+            delete p_consumer_socket_;
+           
+            p_file->close_all();
+            delete p_file;
+           
         }
 
         bool init(broker_config& config_) {

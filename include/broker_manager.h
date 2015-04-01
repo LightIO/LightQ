@@ -52,10 +52,7 @@ namespace lightq {
          */
         ~broker_manager() {
             LOG_IN("");
-            if (p_conn_admin_) {
-                delete p_conn_admin_;
-                p_conn_admin_ = NULL;
-            }
+            delete p_conn_admin_;
             LOG_OUT("");
         }
 

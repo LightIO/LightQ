@@ -43,14 +43,8 @@ namespace lightq {
          */
         ~broker() {
             LOG_IN("");
-            if(p_producer_) {
-                delete p_producer_;
-                p_producer_= NULL;
-            }
-            if(p_consumer_) {
-                delete p_consumer_;
-                p_consumer_= NULL;
-            }
+            delete p_producer_;
+            delete p_consumer_;
             LOG_OUT("");
         }
 

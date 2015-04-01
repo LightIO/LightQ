@@ -114,6 +114,8 @@ namespace lightq {
                 return false;
 
             }
+            int iMode = 0;
+            ioctl(socket_, FIONBIO, &iMode);
            /* if (fcntl(socket_, F_SETFL, fcntl(socket_, F_GETFL, 0) | O_NONBLOCK) == -1) {
                 LOG_ERROR("Failed : ioctl FIONBIO  on socket connected to %s:%d. Err: %d, ErrDesc: %s",
                         host_.c_str(), port_, errno, strerror(errno));
@@ -406,11 +408,20 @@ namespace lightq {
                     LOG_RET("error", -1);
                 } else if (result == 0) {
                     LOG_DEBUG("no data available to read :%d", socket_);
+                    s_sleep(20);
+                }else if(result > utils::max_msg_size) {
+                    LOG_ERROR("This should not happen. Size to read [%lld]", result);
+                    result = 0;
+                    s_sleep(20);
                 }
             }
             LOG_DEBUG("Received  size  to read[ %u]", result);
             buffer_[0] = '\0';
             uint32_t size_to_read = result;
+            if(size_to_read > utils::max_msg_size) {
+                size_to_read = size_to_read;
+            }
+            
             result = 0;
             while (result <= 0) {
                 result = utils::read_buffer(socket_, buffer_, utils::max_msg_size, size_to_read);
@@ -421,8 +432,12 @@ namespace lightq {
                 }
                 if (result == 0) {
                     LOG_DEBUG("read timeout.  Trying again..");
-                    s_sleep(2000);
+                    s_sleep(20);
                 }
+            }
+            if(result > 0) {
+                buffer_[result] = '\0';
+                message.assign(buffer_, result);
             }
             LOG_DEBUG("Received bytes [ %u]", result);
             LOG_RET("", result);
@@ -457,7 +472,7 @@ namespace lightq {
                 }
                 if (result == 0) {
                     LOG_DEBUG("read timeout.  Trying again..");
-                    s_sleep(2000);
+                    s_sleep(20);
                 }
             }
             LOG_DEBUG("Received bytes [ %u]", result);
@@ -510,7 +525,6 @@ namespace lightq {
                     }
                     LOG_DEBUG("Received  size  to read[ %u]", result);
                     buffer_[0] = '\0';
-                    uint32_t size_to_read = result;
                     result = 0;
                     while (result <= 0) {
                         result = utils::read_buffer(fds_[current_fd_index_], buffer_, utils::max_msg_size, result);
@@ -550,14 +564,14 @@ namespace lightq {
             LOG_RET("", 0);
         }
 
-        uint32_t get_write_offset() {
+        uint64_t get_write_offset() {
           //  LOG_IN("");
           //  LOG_DEBUG("current_write_offset_[%u]", current_write_offset_);
          //   LOG_RET("", current_write_offset_);
             return current_write_offset_;
         }
 
-        void set_write_offset(uint32_t offset) {
+        void set_write_offset(uint64_t offset) {
          //   LOG_IN("ofset[%u]", offset);
             current_write_offset_ = offset;
           //  LOG_OUT("");
@@ -643,10 +657,10 @@ namespace lightq {
         std::thread bind_thread_id_;
         bool stop_;
         std::vector<int> fds_;
-        unsigned current_write_offset_;
+        uint64_t current_write_offset_;
         unsigned current_fd_index_;
         process_fd_callback process_fd_callback_;
-        char buffer_[131072]; //128*1024 not thread safe
+        char buffer_[utils::max_msg_size]; //128*1024 not thread safe
         bool client_pull_;
         broker_storage *p_storage_;
         

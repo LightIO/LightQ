@@ -62,15 +62,9 @@ namespace lightq {
             LOG_IN("");
             if (consumer_tid_.joinable())
                 consumer_tid_.join();
-            if (p_consumer_socket_) {
-                delete p_consumer_socket_;
-                p_consumer_socket_ = NULL;
-            }
-            //zqm only
-            if (p_consumer_pub_socket) {
-                delete p_consumer_pub_socket;
-                p_consumer_pub_socket = NULL;
-            }
+            
+            delete p_consumer_socket_;
+            delete p_consumer_pub_socket;
             LOG_OUT("");
         }
 
@@ -245,9 +239,14 @@ namespace lightq {
             int socket_fd = psocket->get_next_fd();
             LOG_DEBUG("received socket fd: %d", socket_fd);
             
-            uint32_t offset = psocket->get_write_offset();
+            if(socket_fd < 0) {
+                LOG_ERROR("No consumer to send data");
+                LOG_RET("no consumer to send data", 0);
+            }
+            
+            uint64_t offset = psocket->get_write_offset();
            
-            LOG_DEBUG("Write offset: %u", offset);
+            LOG_DEBUG("Write offset: %llu", offset);
             result = -1;
             while (result < 0) {
                 result = p_storage_->get_file_connection()->send_file(socket_fd, offset, bytes_to_send);
@@ -324,6 +323,7 @@ namespace lightq {
             }else {
                 return 0;
             }
+            return 0;
         }
     private:
         broker_storage *p_storage_;

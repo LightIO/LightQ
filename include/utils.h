@@ -20,7 +20,7 @@ namespace lightq {
     class utils {
     public:
         enum message_size {
-            max_msg_size = 131072,
+            max_msg_size = 1024*1024,
             max_small_msg_size = 256
             
         };
@@ -283,8 +283,16 @@ namespace lightq {
                 result = read(fd, buffer + bytesRead, bytestoRead);
 
                 if (result < 0) {
-                    LOG_ERROR("Failed to read length of the message");
-                    LOG_RET("Error:", -1);
+                     LOG_ERROR("Failed  to read size Err: %d, ErrDesc: %s",
+                       errno, strerror(errno));
+                    if(errno == EAGAIN || errno == EWOULDBLOCK) {
+                        LOG_RET("", 0);
+                    }else {
+                        LOG_ERROR("Failed to read length of the message");
+                        LOG_RET("Error:", -1);
+                    }
+                }else if (result == 0) {
+                    LOG_RET("no data to read", 0);
                 }
                 bytestoRead -= result;
                 bytesRead += result;
