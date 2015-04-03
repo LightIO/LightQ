@@ -2,7 +2,7 @@
 <configurationDescriptor version="95">
   <projectmakefile>LightQ-Makefile.mk</projectmakefile>
   <confs>
-    <conf name="Debug" type="1">
+    <conf name="Debug" type="2">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <platform>4</platform>
