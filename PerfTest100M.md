@@ -90,3 +90,45 @@ Consumer:
     455682 messages per seconds.
     102400000004 bytes received
     445.0020 MB per second.
+
+#Performance: (Durable broker: file)
+##100 bytes, 100M messages
+
+Producer:
+
+    ./dist/Release/GNU-MacOSX/lightq producer 100000000 100 event
+    Total Messages:100000000, Time Taken:291.86 seconds.
+    Start Time: 1427891740258, End Time:1427892032117
+    342630 messages per seconds.
+    10000000000 bytes sent
+    32.6758 MB per second.
+    
+Consumer:
+
+    ./dist/Release/GNU-MacOSX/lightq consumer file socket  pull event
+    Total Messages:100000001, Time Taken:291.896 seconds.
+    Start Time: 1427891740271, End Time:1427892032167
+    342587 messages per seconds.
+    10000000004 bytes received
+    32.6717 MB per second.
+    
+##256 bytes 100M Messages
+
+Producer:
+
+    ./dist/Release/GNU-MacOSX/lightq producer 100000000 256 event
+    Total Messages:100000000, Time Taken:284.6 seconds.
+    Start Time: 1427892109361, End Time:1427892393961
+    351370 messages per seconds.
+    25600000000 bytes sent
+    85.7837 MB per second.
+    
+Consumer:
+
+    ./dist/Release/GNU-MacOSX/lightq consumer file socket  pull event
+    Total Messages:100000001, Time Taken:284.619 seconds.
+    Start Time: 1427892109372, End Time:1427892393991
+    351347 messages per seconds.
+    25600000004 bytes received
+    85.7781 MB per second.
+
