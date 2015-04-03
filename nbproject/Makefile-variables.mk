@@ -20,8 +20,8 @@ CND_ARTIFACT_DIR_Release=dist/Release/GNU-MacOSX
 CND_ARTIFACT_NAME_Release=liblightq.dylib
 CND_ARTIFACT_PATH_Release=dist/Release/GNU-MacOSX/liblightq.dylib
 CND_PACKAGE_DIR_Release=dist/Release/GNU-MacOSX/package
-CND_PACKAGE_NAME_Release=lightq.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-MacOSX/package/lightq.tar
+CND_PACKAGE_NAME_Release=libLightQ.dylib.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-MacOSX/package/libLightQ.dylib.tar
 #
 # include compiler specific variables
 #

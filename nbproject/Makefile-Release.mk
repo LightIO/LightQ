@@ -60,12 +60,12 @@ LDLIBSOPTIONS=-L. -L/opt/zeromq/lib -L/usr/local/opt/zlib/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblightq.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblightq.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz -pthread
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblightq.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -m64 -lzmq -lz -pthread -dynamiclib -install_name liblightq.${CND_DLIB_EXT} -fPIC
 
 ${OBJECTDIR}/src/lightq_api.o: src/lightq_api.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O3 -Iinclude -Iinclude/thirdparty -I/opt/zeromq/include -I/usr/local/opt/zlib/include -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/lightq_api.o src/lightq_api.cpp
+	$(COMPILE.cc) -O3 -Iinclude -Iinclude/thirdparty -I/opt/zeromq/include -I/usr/local/opt/zlib/include -std=c++11 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/lightq_api.o src/lightq_api.cpp
 
 # Subprojects
 .build-subprojects:
