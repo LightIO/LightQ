@@ -11,6 +11,8 @@
 #include <zlib.h>
 #include <string>
 #include <chrono>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 #include <vector>
 #include "log.h"
 using namespace std::chrono;
