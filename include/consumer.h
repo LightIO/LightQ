@@ -195,6 +195,7 @@ namespace lightq {
                      while (p_storage_->get_queue_size() <= 0 ) {
                         s_sleep(10); //define magic number fixme
                     }
+                     
                     result = p_storage_->get_message_from_queue(message);
                     if (result > 0) {
                         //write to push socket
@@ -202,7 +203,7 @@ namespace lightq {
                             connection_zmq* psocket = (connection_zmq*) p_consumer_socket_;
                              LOG_TRACE("number of connected pull clients: %u", psocket->get_num_connected_clients());
                             if (psocket->get_num_connected_clients() > 0) {
-                                result = psocket->write_msg(message);
+                                result = psocket->write_msg(message.c_str(), message.length());
                             }else {
                                 LOG_DEBUG("No clients are connected to push socket. Not sending message");
                             }
@@ -212,7 +213,7 @@ namespace lightq {
                             connection_zmq* psocket = (connection_zmq*) p_consumer_pub_socket;
                              LOG_TRACE("number of connected pub clients: %u", psocket->get_num_connected_clients());
                             if (psocket->get_num_connected_clients() > 0) {
-                                result = psocket->write_msg(message);
+                                result = psocket->write_msg(message.c_str(), message.length());
                             }else {
                                 LOG_DEBUG("No clients are connected to pub socket. Not sending message");
                             }

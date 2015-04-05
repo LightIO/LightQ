@@ -78,7 +78,7 @@ s_send (zmq::socket_t & socket, const std::string & string, bool zerocopy=false)
 
     zmq::message_t *pmessage = NULL;
     if(zerocopy) {
-         pmessage = new  zmq::message_t ((void *)string.c_str(), string.length(), dont_free, NULL);
+         pmessage = new  zmq::message_t ((void *)string.data(), string.size(), dont_free, NULL);
     }else {
        pmessage = new  zmq::message_t(string.size());
        memcpy (pmessage->data(), string.data(), string.size());

@@ -4,7 +4,7 @@
  *
  * Created on April 2, 2015, 8:37 AM
  */
-
+#include <iostream>
 #include "../log.h"
 #include "../broker_manager.h"
 #include "lightq_api.h"
@@ -22,10 +22,15 @@ using namespace lightq;
  */
 bool init_log(const char* process_name, lightq_loglevel level) {
     bool result = false;
+    if(process_name == NULL) {
+        std::cerr << "Processname must not be null\n" ;
+        return false;
+    }
     try {
         return lightq::log::init(process_name, (spdlog::level::level_enum)level);
     } catch (std::exception& ex) {
         LOG_ERROR("Error: Exception [%s]", ex.what());
+        std::cerr << "Failed to initialize logger. Exception: " <<  ex.what() << "\n";
     } catch (...) {
     }
     return result;
@@ -180,7 +185,7 @@ int publish_message(lightq_producer_conn* p_producer_conn, const char* message, 
     int bytes_sent = -1;
     try {
         lightq::connection_zmq *pub_conn = static_cast<lightq::connection_zmq*> (p_producer_conn->conn->client_conn);
-        bytes_sent = pub_conn->write_msg(message);
+        bytes_sent = pub_conn->write_msg(message, message_length);
         if (bytes_sent < 0) {
             LOG_ERROR("Failed to send message");
             LOG_RET("error", bytes_sent);
@@ -269,7 +274,9 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
         req.user_id_ = userid;
         req.type_ = "pull";
         req.topic_ = topic;
-        ssize_t size = p_admin_socket->write_msg(req.to_json());
+        std::string req_str = req.to_json();
+        LOG_DEBUG("Sending request [%s]", req_str.c_str());
+        ssize_t size = p_admin_socket->write_msg(req_str);
         if (size <= 0) {
             LOG_ERROR("Failed to create a lightq_conn");
             LOG_RET("error", p_consumer_conn);

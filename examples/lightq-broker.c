@@ -75,7 +75,8 @@ int main(int argc, char** argv) {
       }
     }
     
-    
+     printf("[-u admin_userid[%s]] [-p admin_password[%s]] [-i bind_ip[%s]] [-b bind_port[%d]] [-t transport[%s]] [-l loglevel[%s]]\n", 
+                argv[0], admin_userid, admin_password, bind_ip, bind_port, transport, logleve);
 
     lightq_loglevel level = str_to_loglevel(loglevel);
     init_log(argv[0], level);
@@ -84,8 +85,11 @@ int main(int argc, char** argv) {
     
     if(p_broker) {
         run_broker(p_broker, true);
+    }else {
+      printf("Failed to initialize broker");
     }
       
    return (EXIT_SUCCESS);
+    }
 }
 

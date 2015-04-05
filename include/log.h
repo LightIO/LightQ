@@ -11,6 +11,7 @@
 #include <boost/format.hpp>
 #include "thirdparty/spdlog/spdlog.h"
 
+
  
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -78,7 +79,13 @@ namespace lightq {
         static bool init(const std::string& process_name, spdlog::level::level_enum level = spdlog::level::notice) {
             
             std::string logfile("logs/");
-            logfile.append(process_name);
+            std::istringstream ss(process_name);
+            std::string token;
+            std::vector<std::string> tokens;
+            while (std::getline(ss, token, '/')) {
+                tokens.push_back(token);
+            }
+            logfile.append(tokens[tokens.size()-1]);
             logfile.append("_");
             uint32_t pid = getpid();
             

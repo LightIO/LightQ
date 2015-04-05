@@ -281,7 +281,7 @@ namespace lightq {
                 filename = file_fds_[current_fd_index_]->file_name_;
            }
            LOG_TRACE("filename [%s]", filename.c_str());
-           std::move(filename);
+           return std::move(filename);
            
         }
 

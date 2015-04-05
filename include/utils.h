@@ -40,7 +40,7 @@ namespace lightq {
         inline static std::string format_str(const char * buf, ...) {
             va_list args;
             va_start(args, buf);
-            std::string msg = log::format_arg_list(buf, args);
+            std::string msg = lightq::log::format_arg_list(buf, args);
             va_end(args);
             return msg;
         }

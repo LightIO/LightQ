@@ -86,6 +86,7 @@ namespace lightq {
             }else {
                 th.detach();
             }
+             LOG_RET_TRUE("success");
             
         }
 

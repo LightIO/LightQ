@@ -55,14 +55,18 @@
   </logicalFolder>
   <projectmakefile>LightQ-Makefile.mk</projectmakefile>
   <confs>
-    <conf name="Debug" type="2">
+    <conf name="Release" type="2">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
         <ccTool>
+          <developmentMode>6</developmentMode>
           <architecture>2</architecture>
           <standard>8</standard>
           <commandlineTool>/usr/local/bin/g++-4.9</commandlineTool>
@@ -70,18 +74,23 @@
             <pElem>include</pElem>
             <pElem>include/thirdparty</pElem>
             <pElem>/opt/zeromq/include</pElem>
+            <pElem>/usr/local/opt/zlib/include</pElem>
           </incDir>
-          <commandLine>-DDEBUG -std=c++11 -O0 -DPICOJSON_USE_INT64 -ggdb</commandLine>
+          <commandLine>-m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra -DPICOJSON_USE_INT64</commandLine>
         </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblightq.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>.</pElem>
             <pElem>/opt/zeromq/lib</pElem>
-            <pElem>.</pElem>
             <pElem>/usr/local/opt/zlib/lib</pElem>
           </linkerAddLib>
-          <commandlineTool>/usr/local/bin/g++-4.9</commandlineTool>
           <commandLine>-m64 -lzmq -lz -pthread</commandLine>
         </linkerTool>
       </compileType>
@@ -120,18 +129,14 @@
       <item path="src/lightq_api.cpp" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
-    <conf name="Release" type="2">
+    <conf name="Debug" type="2">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
-        <cTool>
-          <developmentMode>5</developmentMode>
-        </cTool>
         <ccTool>
-          <developmentMode>6</developmentMode>
           <architecture>2</architecture>
           <standard>8</standard>
           <commandlineTool>/usr/local/bin/g++-4.9</commandlineTool>
@@ -139,23 +144,18 @@
             <pElem>include</pElem>
             <pElem>include/thirdparty</pElem>
             <pElem>/opt/zeromq/include</pElem>
-            <pElem>/usr/local/opt/zlib/include</pElem>
           </incDir>
-          <commandLine>-m64 -O3 -DNDEBUG -std=c++11 -flto -Wall -Wextra -DPICOJSON_USE_INT64</commandLine>
+          <commandLine>-DDEBUG -std=c++11 -O0 -DPICOJSON_USE_INT64 -ggdb</commandLine>
         </ccTool>
-        <fortranCompilerTool>
-          <developmentMode>5</developmentMode>
-        </fortranCompilerTool>
-        <asmTool>
-          <developmentMode>5</developmentMode>
-        </asmTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblightq.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>.</pElem>
             <pElem>/opt/zeromq/lib</pElem>
+            <pElem>.</pElem>
             <pElem>/usr/local/opt/zlib/lib</pElem>
           </linkerAddLib>
+          <commandlineTool>/usr/local/bin/g++-4.9</commandlineTool>
           <commandLine>-m64 -lzmq -lz -pthread</commandLine>
         </linkerTool>
       </compileType>

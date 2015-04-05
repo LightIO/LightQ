@@ -180,7 +180,6 @@ namespace lightq {
                 } else {
                     LOG_TRACE("Running server loop");
                     while (!stop_) {
-                        long on = 1L;
                         LOG_DEBUG("Accepting connection...");
                         int connfd = accept(listen_fd_, (struct sockaddr*) NULL, NULL);
                         if (connfd < 0) {
@@ -464,7 +463,7 @@ namespace lightq {
             uint32_t size_to_read = result;
             result = 0;
             while (result <= 0) {
-                result = utils::read_buffer(socket_, message, utils::max_msg_size, size_to_read);
+                result = utils::read_buffer(socket_, message, length, size_to_read);
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", socket_);
 
@@ -490,7 +489,7 @@ namespace lightq {
         ssize_t read_msg(char* message, unsigned length, bool ntohl = false) {
             if(endpoint_type_ == endpoint_type::conn_consumer && socket_connect_type_ == socket_connect_type::connect_socket) {
                 LOG_DEBUG("Client socket type.");
-                return client_socket_read_msg(message, ntohl);
+                return client_socket_read_msg(message, length,ntohl);
             }
             LOG_ERROR("Not implemented");
             LOG_RET("Not implemented", -1);

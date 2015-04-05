@@ -150,7 +150,7 @@ namespace lightq {
                    s_sendmore(*p_socket_, topic_, true);
                  }
                 
-                if (s_send(*p_socket_, message, true)) {
+                if (s_send(*p_socket_, message, false)) {
                     total_bytes_written_ += message.length();
                     total_msg_written_ += 1;
                     LOG_RET("Successfully send message", message.length());
