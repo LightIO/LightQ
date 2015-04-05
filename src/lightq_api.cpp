@@ -20,10 +20,12 @@ using namespace lightq;
  * @param level
  * @return 
  */
-bool init_log(lightq_loglevel level) {
+bool init_log(const char* process_name, lightq_loglevel level) {
     bool result = false;
     try {
-        return lightq::log::init((spdlog::level::level_enum)level);
+        return lightq::log::init(process_name, (spdlog::level::level_enum)level);
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     return result;
@@ -60,8 +62,9 @@ bool set_loglevel(lightq_loglevel level) {
             lightq::log::logger()->set_level(spdlog::level::notice);
         }
         LOG_RET_TRUE("success");
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
-
     }
     LOG_RET_FALSE("error");
 }
@@ -84,37 +87,42 @@ lightq_producer_conn* init_producer(const char* userid, const char* password, co
                 lightq::connection::connect_socket,
                 false,
                 false);
-        if (!p_admin_socket && !p_admin_socket->init() && p_admin_socket->run()) {
+        if (!p_admin_socket || !p_admin_socket->init() || !p_admin_socket->run()) {
             LOG_ERROR("Failed to initialize producer for admin connection");
             LOG_RET("error", p_producer_conn);
         }
-        std::string response;
+        LOG_DEBUG("Admin connection to broker[%s] created successfully", broker_uri);
+
         lightq::admin_cmd::join_req req;
         req.connection_type_ = "zmq";
         req.password_ = password;
         req.user_id_ = userid;
         req.type_ = "pub";
         req.topic_ = topic;
-        ssize_t size = p_admin_socket->write_msg(req.to_json());
+        std::string req_str = req.to_json();
+        LOG_DEBUG("Sending request[%s]", req_str.c_str());
+        ssize_t size = p_admin_socket->write_msg(req_str);
         if (size <= 0) {
             LOG_ERROR("Failed to create a lightq_conn");
             LOG_RET("error", p_producer_conn);
         }
+        std::string response;
         p_admin_socket->read_msg(response);
+        LOG_DEBUG("Response received[%s]", response.c_str());
         lightq::admin_cmd::join_resp resp;
         resp.from_json(response);
         if (resp.status_ == "error") {
             LOG_ERROR("Login Failed. response %s", response.c_str());
             LOG_RET("error", p_producer_conn);
         }
-
+        s_sleep(1000);
         lightq::connection_zmq* p_push_socket = new lightq::connection_zmq(resp.topic_, resp.bind_uri_,
                 lightq::connection::conn_publisher,
                 lightq::connection_zmq::zmq_push,
                 lightq::connection::connect_socket,
                 false,
                 false);
-        if (!p_push_socket->init()) {
+        if (!p_push_socket || !p_push_socket->init()) {
             LOG_ERROR("Failed to initialize producer connection");
             LOG_RET("error", p_producer_conn);
         }
@@ -123,7 +131,6 @@ lightq_producer_conn* init_producer(const char* userid, const char* password, co
         p_lightq_conn->client_conn = static_cast<void*> (p_push_socket);
         p_lightq_conn->admin_conn = static_cast<void*> (p_admin_socket);
         p_lightq_conn->message_counter = 0;
-
         p_lightq_conn->payload_size_counter = 0;
         strcpy(p_lightq_conn->topic, resp.topic_.c_str());
         strcpy(p_lightq_conn->userid, userid);
@@ -138,6 +145,8 @@ lightq_producer_conn* init_producer(const char* userid, const char* password, co
         p_producer_conn->pubDelayAlgorithm = publish_delay_algorithm;
         LOG_EVENT("lightq_producer_conn for producer created successfully.");
         return p_producer_conn;
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
 
@@ -160,9 +169,13 @@ int publish_message(lightq_producer_conn* p_producer_conn, const char* message, 
         LOG_RET("error", -1);
     }
 
-    if (!p_producer_conn->conn || !p_producer_conn->conn->client_conn) {
+    if (!p_producer_conn->conn || !p_producer_conn->conn || !p_producer_conn->conn->client_conn) {
         LOG_ERROR("lightq_conn is null. you must call init_producer() prior to publishing messages");
         LOG_RET("error", -1);
+    }
+    if (message_length > utils::max_msg_size) {
+        LOG_ERROR("Message length %u is larger than allowed message length %u. Can't send message", message_length, utils::max_msg_size);
+        return -1;
     }
     int bytes_sent = -1;
     try {
@@ -172,12 +185,14 @@ int publish_message(lightq_producer_conn* p_producer_conn, const char* message, 
             LOG_ERROR("Failed to send message");
             LOG_RET("error", bytes_sent);
         }
-        ++p_producer_conn->conn->message_counter;
+        p_producer_conn->conn->message_counter += 1;
         p_producer_conn->conn->payload_size_counter += bytes_sent;
 
         if (p_producer_conn->delay_pub_on_slow_consumer && p_producer_conn->pubDelayAlgorithm) {
             p_producer_conn->pubDelayAlgorithm(p_producer_conn);
         }
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     LOG_RET("success", bytes_sent);
@@ -190,13 +205,22 @@ int publish_message(lightq_producer_conn* p_producer_conn, const char* message, 
 void publish_delay_algorithm(void *pconn) {
     LOG_IN("conn[%p]", pconn);
     try {
-        lightq_producer_conn* p_producer_conn = static_cast<lightq_producer_conn *> (pconn);
-
-        topic_stats stats;
-        if (!get_stats(p_producer_conn->conn, &stats)) {
-            LOG_ERROR("Failed to get stats to determine queue depth");
+        if (pconn == NULL) {
+            LOG_ERROR("pconn is null. Can't run");
+            return;
         }
-        if (stats.messages_sent % 100000) {
+        lightq_producer_conn* p_producer_conn = static_cast<lightq_producer_conn *> (pconn);
+        if (p_producer_conn->conn == NULL) {
+            LOG_ERROR("p_producer_conn->conn is null. Can't run");
+            return;
+        }
+        topic_stats stats;
+        if (p_producer_conn->conn->message_counter % 500000 == 0) {
+            if (!get_stats(p_producer_conn->conn, &stats)) {
+                LOG_ERROR("Failed to get stats to determine queue depth");
+                return;
+            }
+
             if (stats.queue_size > 10000) {
                 LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
                 s_sleep(stats.queue_size / 1000);
@@ -205,6 +229,8 @@ void publish_delay_algorithm(void *pconn) {
             }
             p_producer_conn->last_queue_size = stats.queue_size;
         }
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
 
@@ -228,7 +254,7 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
                 lightq::connection::connect_socket,
                 false,
                 false);
-        if (!p_admin_socket && !p_admin_socket->init() && p_admin_socket->run()) {
+        if (!p_admin_socket || !p_admin_socket->init() || !p_admin_socket->run()) {
             LOG_ERROR("Failed to initialize producer for admin connection");
             LOG_RET("error", p_consumer_conn);
         }
@@ -259,8 +285,8 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
         lightq::connection* p_consumer_socket = NULL;
         if (consumer_type == consumer_socket_type::zmq_consumer) {
             p_consumer_socket = new lightq::connection_zmq(resp.topic_, resp.bind_uri_,
-                    lightq::connection::conn_publisher,
-                    lightq::connection_zmq::zmq_push,
+                    lightq::connection::conn_consumer,
+                    lightq::connection_zmq::zmq_pull,
                     lightq::connection::connect_socket,
                     false,
                     false);
@@ -291,6 +317,8 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
         LOG_EVENT("lightq_consumer_conn for consumer created successfully.");
         return p_consumer_conn;
 
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     return p_consumer_conn;
@@ -314,6 +342,8 @@ int receive_message(lightq_consumer_conn* p_consumer_conn, char* buffer, uint32_
             connection_socket *p_conn_sock = static_cast<connection_socket*> (p_consumer_conn->p_lightq_conn->client_conn);
             bytes_read = p_conn_sock->read_msg(buffer, buffer_length, true);
         }
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     LOG_RET("", bytes_read);
@@ -359,6 +389,8 @@ bool get_stats(lightq_conn* p_lightq_conn, topic_stats* stats) {
         stats->total_bytes_read = resp.total_bytes_read_;
         stats->total_bytes_written = resp.total_bytes_written_;
         LOG_RET_TRUE("success");
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     LOG_RET_FALSE("failed");
@@ -371,9 +403,9 @@ bool get_stats(lightq_conn* p_lightq_conn, topic_stats* stats) {
  * @param start_port
  * @return 
  */
-lightq_broker_mgr* init_broker(const char* admin_userid, const char* admin_password, const char* transport, 
-            const char* bind_ip, unsigned bind_port) {
-    LOG_IN("admin_userid[%s], admin_password[%u], transport[%s], bind_ip[%s], bind_port[%d]", 
+lightq_broker_mgr* init_broker(const char* admin_userid, const char* admin_password, const char* transport,
+        const char* bind_ip, unsigned bind_port) {
+    LOG_IN("admin_userid[%s], admin_password[%u], transport[%s], bind_ip[%s], bind_port[%d]",
             admin_userid, admin_password, transport, bind_ip, bind_port);
     try {
         ;
@@ -391,6 +423,8 @@ lightq_broker_mgr* init_broker(const char* admin_userid, const char* admin_passw
         p_lightq_mgr->broker = static_cast<void*> (p_mgr);
         strcpy(p_lightq_mgr->broker_uri, bind_uri.c_str());
         LOG_RET("success", p_lightq_mgr);
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     LOG_RET("failed", NULL);
@@ -415,8 +449,10 @@ bool run_broker(lightq_broker_mgr* p_broker_mgr, bool block) {
             t.join();
             result = true;
         } else {
-            result =  p_broker->run();
+            result = p_broker->run();
         }
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     LOG_RET("result", result);
@@ -434,7 +470,7 @@ bool run_broker(lightq_broker_mgr* p_broker_mgr, bool block) {
  * @param storage_type
  * @return 
  */
-bool create_topic(const char* broker_uri, const char* topic, const char* admin_userid, const char* admin_password, 
+bool create_topic(const char* broker_uri, const char* topic, const char* admin_userid, const char* admin_password,
         const char* userid, const char* password, broker_storage_type storage_type) {
     LOG_IN("broker_uri[%s], topic[%s], admin_userid[%s], admin_password[%s], userid[%s], password[%s], storage_type[%d]",
             broker_uri, topic, admin_userid, admin_password, userid, password, storage_type);
@@ -452,9 +488,9 @@ bool create_topic(const char* broker_uri, const char* topic, const char* admin_u
         admin_cmd::create_topic_req req;
         req.admin_password_ = admin_password;
         req.admin_user_id_ = admin_userid;
-        if(storage_type == broker_storage_type::file_type) {
-          req.broker_type_ = "file";
-        }else {
+        if (storage_type == broker_storage_type::file_type) {
+            req.broker_type_ = "file";
+        } else {
             req.broker_type_ = "queue";
         }
         req.topic_ = topic;
@@ -470,10 +506,12 @@ bool create_topic(const char* broker_uri, const char* topic, const char* admin_u
         admin_socket.read_msg(response);
         LOG_EVENT("topic [%s] creation success", req.topic_.c_str());
         LOG_RET_TRUE("success");
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
     } catch (...) {
     }
     LOG_RET_FALSE("failed");
-    
+
 
 }
 
@@ -483,7 +521,7 @@ bool create_topic(const char* broker_uri, const char* topic, const char* admin_u
  * @return 
  */
 lightq_loglevel str_to_loglevel(const char* log_level) {
-   
+
     std::string level(log_level);
     if (level == "trace") {
         return LOG_TRACE;
@@ -505,9 +543,35 @@ lightq_loglevel str_to_loglevel(const char* log_level) {
         return LOG_EMERG;
     } else if (level == "off") {
         return LOG_OFF;
-    }else {
-         return LOG_EVENT;
+    } else {
+        return LOG_EVENT;
     }
+}
+
+/**
+ * Get current time in mill second
+ * @return 
+ */
+unsigned long get_current_time_millsec() {
+    try {
+        high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
+        return utils::get_currenttime_milliseconds(t);
+    } catch (std::exception& ex) {
+        LOG_ERROR("Error: Exception [%s]", ex.what());
+    } catch (...) {
+    }
+    return 0;
+}
+
+/**
+ * generate random string for a given size. make sure you pass preallocated buffer
+ * @param buffer
+ * @param size
+ */
+void generate_random_string(char* buffer, unsigned size) {
+    std::string message = utils::random_string(size);
+    strcpy(buffer, message.c_str());
+    buffer[message.length()] = '\0';
 }
 
 

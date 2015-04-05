@@ -75,9 +75,11 @@ namespace lightq {
          * @param level
          * @return 
          */
-        static bool init(spdlog::level::level_enum level = spdlog::level::notice) {
+        static bool init(const std::string& process_name, spdlog::level::level_enum level = spdlog::level::notice) {
             
-            std::string logfile("logs/lightq_");
+            std::string logfile("logs/");
+            logfile.append(process_name);
+            logfile.append("_");
             uint32_t pid = getpid();
             
             //initialize details logger

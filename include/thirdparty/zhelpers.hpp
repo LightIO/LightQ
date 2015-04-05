@@ -85,6 +85,7 @@ s_send (zmq::socket_t & socket, const std::string & string, bool zerocopy=false)
     }
 
     bool rc = socket.send (*pmessage);
+    delete pmessage;
     return (rc);
 }
 
@@ -102,6 +103,7 @@ s_send (zmq::socket_t & socket, const char* buffer, unsigned length, bool zeroco
     }
 
     bool rc = socket.send (*pmessage);
+    delete pmessage;
     return (rc);
 }
 
@@ -119,6 +121,7 @@ s_sendmore (zmq::socket_t & socket, const std::string & string, bool zerocopy=fa
     }
 
     bool rc = socket.send (*pmessage, ZMQ_SNDMORE);
+    delete pmessage;
     return (rc);
 }
 

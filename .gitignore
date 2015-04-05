@@ -2,3 +2,6 @@ dist
 build
 logs
 nbproject/private
+examples/bin
+examples/logs
+examples/build

@@ -47,13 +47,13 @@ typedef int bool;
     typedef struct {
            char status[128];
            char topic[256];
-           int64_t queue_size;
-           int64_t messages_sent;
-           int64_t messages_received;
-           int64_t publishers_count;
-           int64_t subscribers_count;
-           int64_t total_bytes_written;
-           int64_t total_bytes_read;
+           uint64_t queue_size;
+           uint64_t messages_sent;
+           uint64_t messages_received;
+           uint64_t publishers_count;
+           uint64_t subscribers_count;
+           uint64_t total_bytes_written;
+           uint64_t total_bytes_read;
     }topic_stats;
 
     
@@ -96,7 +96,7 @@ typedef int bool;
     typedef enum {
         queue_type,
         file_type
-    }broker_storage_type;
+    } broker_storage_type;
     /**
      * Broker manager
      */
@@ -112,7 +112,7 @@ typedef int bool;
      * @param level
      * @return 
      */
-    bool init_log(lightq_loglevel level DEFAULT_VALUE(lightq_loglevel::LOG_EVENT));
+    bool init_log(const char* process_name, lightq_loglevel level DEFAULT_VALUE(lightq_loglevel::LOG_EVENT));
     
     /**
      * set log level
@@ -200,6 +200,20 @@ typedef int bool;
     * @return 
     */
     lightq_loglevel str_to_loglevel(const char* log_level);
+    
+    
+    /**
+     * get current time in mill second
+     * @return 
+     */
+    unsigned long get_current_time_millsec();
+    
+    /**
+     * generate random string for a given size. make sure you pass preallocated buffer size+1 (for null termination)
+     * @param buffer
+     * @param size
+     */
+    void generate_random_string(char* buffer, unsigned size);
 
 
 #ifdef	__cplusplus
