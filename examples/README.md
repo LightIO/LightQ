@@ -2,8 +2,11 @@
 It will create broker, consumer and producer under ./bin directory. 
 Run each program with -h option to see optional commandline parameters.
 
-    ./make.sh
-    NOTE: This is just temporary workaround.  Need to create a proper make file
+    mkdir build
+    cd build
+    cmake ..
+    make install
+    cd ../bin
 
 ## Run examples
    
