@@ -37,20 +37,20 @@ namespace lightq {
            
         }
 
-        bool init(broker_config& config_) {
-            LOG_IN("config [%p]", &config_);
+        bool init(broker_config& config) {
+            LOG_IN("config [%p]", &config);
             //initialize broker storage
-            if (config_.broker_type_ == broker_config::broker_queue) {
+            if (config.broker_type_ == broker_config::broker_queue) {
                 LOG_DEBUG("Broker type is queue");
-                p_queue_ = new moodycamel::ReaderWriterQueue<std::string>(config_.default_queue_size_);
+                p_queue_ = new moodycamel::ReaderWriterQueue<std::string>(config.default_queue_size_);
                 LOG_RET_TRUE("success");
-            } else if (config_.broker_type_ == broker_config::broker_file) {
+            } else if (config.broker_type_ == broker_config::broker_file) {
                 LOG_DEBUG("Broker type is file");
-                p_file = new connection_file(config_.output_directory_, config_.id_, "", connection::conn_broker, true);
+                p_file = new connection_file(config_.output_directory_, config.id_, "", connection::conn_broker, true);
                 LOG_RET_TRUE("success");
-            }else if (config_.broker_type_ == broker_config::broker_queue_file) {
-                p_queue_ = new moodycamel::ReaderWriterQueue<std::string>(config_.default_queue_size_);
-                p_file = new connection_file(config_.output_directory_, config_.id_, "", connection::conn_broker, true);
+            }else if (config.broker_type_ == broker_config::broker_queue_file) {
+                p_queue_ = new moodycamel::ReaderWriterQueue<std::string>(config.default_queue_size_);
+                p_file = new connection_file(config.output_directory_, config.id_, "", connection::conn_broker, true);
                 run_queue_to_file_loop();
             }else {
                 LOG_DEBUG("Broker type is direct");
@@ -137,7 +137,7 @@ namespace lightq {
             std::string message;
             
             buffer_[0] = '\0';
-            result = p_file->read(buffer_,utils::get_max_message_size(), total_bytes_read_, ntohl);
+            result = p_file->read(buffer_,utils::max_msg_size, total_bytes_read_, ntohl);
            // result = p_file->read_msg(message,total_bytes_read_, ntohl);
             if (result < 0) {
                  //   LOG_ERROR("Failed to read from the file : %s", p_file->get_current_file().c_str());
@@ -249,7 +249,6 @@ namespace lightq {
 
         bool write_to_queue(const std::string& message) {
             LOG_IN("message: %u", message.length());
-
             while (!p_queue_->try_enqueue(message)) { 
                 s_sleep(3);// 
                 LOG_TRACE("Retrying to enqueue message");
