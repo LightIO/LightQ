@@ -94,7 +94,7 @@ namespace lightq {
         bool process_producers() {
             LOG_IN("");
             std::string message;
-            message.reserve(utils::get_max_message_size()); // FIXME
+            message.reserve(utils::max_msg_size); 
             while (!stop_) {
                 message.clear();
                 ssize_t bytes_read = p_producer_socket->read_msg(message);
