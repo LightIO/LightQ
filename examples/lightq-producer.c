@@ -43,7 +43,7 @@ static void execute_publisher(void* p_pub) {
             if(i == 0) {
                sprintf(buffer, "%lu", start_time);
                bytes_sent = publish_message(pub->p_producer, buffer, strlen(buffer));
-               printf("First message start time[%ul]\n", start_time);
+               printf("Topic[%s], Producer: first message sent timestamp [%ul]\n", pub->topic, start_time);
             }else {
                 bytes_sent = publish_message(pub->p_producer, buffer, pub->message_size);
             }
@@ -56,12 +56,13 @@ static void execute_publisher(void* p_pub) {
         }
 
         end_time = get_current_time_millsec();
+        printf("Topic[%s], Producer: last message sent timestamp [%ul]\n", pub->topic, end_time);
         unsigned total_time_ms = end_time - start_time;
         float total_time_sec = total_time_ms / 1000;
         
-        printf("Topic[%s], Total message sent [%llu] in [%.2f]sec\n", pub->topic, pub->messages_to_send, total_time_sec);
+        printf("Topic[%s], Total message sent [%llu] in [%.2f] sec\n", pub->topic, pub->messages_to_send, total_time_sec);
         printf("Topic[%s], Average messages sent per second [%.2f]\n", pub->topic,pub->messages_to_send / total_time_sec);
-        printf("Topic[%s], Average bandwidth sent per second [%.4f]MB\n", pub->topic, total_bytes_sent / (1024 * 1024 * total_time_sec));
+        printf("Topic[%s], Average bandwidth sent per second [%.4f] MB\n", pub->topic, total_bytes_sent / (1024 * 1024 * total_time_sec));
 
     }
 }
