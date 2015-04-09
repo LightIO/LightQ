@@ -248,13 +248,19 @@ namespace lightq {
            LOG_RET("", 0);
         }
         
-        ssize_t read_msg(const char* message, uint64_t offset, bool ntohl=false) {
-             LOG_IN("offset [%llu]", offset);
+        ssize_t read_msg(char* message, uint32_t buffer_length, uint64_t offset, bool ntohl=false) {
+             LOG_IN("message[%p], buffer_length[%u], offset [%llu], ntohl[%d]", message, buffer_length, offset,ntohl);
            
-             ssize_t bytes_read = read(buffer, utils::max_msg_size, offset, ntohl);
+             ssize_t bytes_read = read(buffer_, utils::max_msg_size, offset, ntohl);
            //  message.append(buffer, bytes_read);
              LOG_TRACE("Message read: %s", message);
              LOG_RET("", bytes_read);
+        }
+        
+        ssize_t read_msg(char* message, uint32_t buffer_length, bool ntohl=false) {
+           LOG_IN("message[%p], buffer_length[%u],  ntohl[%d]", message, buffer_length, ntohl);
+           throw std::runtime_error("connection_file::read_msg():not implemented");
+           LOG_RET("", -1);
         }
         
         ssize_t read_msg(std::string& message) {
@@ -270,7 +276,7 @@ namespace lightq {
         }
        
        ssize_t write_msg(const char* message, unsigned length) {
-           LOG_IN("message [%s]", message);
+           LOG_IN("message [%s], length[%u]", message, length);
            throw std::runtime_error("connection_file::write_msg():not implemented");
            LOG_RET("", -1);
         }
@@ -302,7 +308,7 @@ namespace lightq {
         uint64_t max_file_size_;
         std::atomic<uint64_t> total_bytes_writen_; //FIXME: Do we need as atomic
         uint64_t msg_counter_;
-        char buffer[utils::max_msg_size]; //128*1024
+        char buffer_[utils::max_msg_size]; //128*1024
 
 
         /**
