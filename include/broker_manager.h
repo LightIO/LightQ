@@ -338,11 +338,11 @@ namespace lightq {
                         prod_conf.producer_stream_type_ = connection::stream_type::stream_zmq;
                         prod_conf.producer_socket_connect_type_ = connection::bind_socket;
                         if (!it->second->init_producer(prod_conf)) {
-                            admin_cmd::common_resp resp;
-                            resp.cmd_ = req.cmd_;
-                            resp.status_ = STATUS_ERROR;
-                            resp.description_ = "Failed to initialize producer endpoint";
-                            std::string resp_str = resp.to_json();
+                            admin_cmd::common_resp cmd_resp;
+                            cmd_resp.cmd_ = req.cmd_;
+                            cmd_resp.status_ = STATUS_ERROR;
+                            cmd_resp.description_ = "Failed to initialize producer endpoint";
+                            std::string resp_str = cmd_resp.to_json();
                             LOG_EVENT("Status response: %s", resp_str.c_str());
                             return reply_cmd(resp_str);
                         }
@@ -351,17 +351,17 @@ namespace lightq {
                     }
                     if (it->second->get_producer()) {
                         resp.bind_uri_ = it->second->get_producer()->get_bind_uri();
-                        boost::replace_all(resp.bind_uri_, "*", "127.0.0.1"); //FIXME usenetwork interfacd
+                        utils::replace(resp.bind_uri_, "*", "127.0.0.1"); //FIXME usenetwork interfacd
                         std::string resp_str = resp.to_json();
                         LOG_EVENT("Status response: %s", resp_str.c_str());
                         return reply_cmd(resp_str);
                     } else {
                         LOG_ERROR("THis should not happend")
-                        admin_cmd::common_resp resp;
-                        resp.cmd_ = req.cmd_;
-                        resp.status_ = STATUS_ERROR;
-                        resp.description_ = "internal server error";
-                        std::string resp_str = resp.to_json();
+                        admin_cmd::common_resp cmd_resp;
+                        cmd_resp.cmd_ = req.cmd_;
+                        cmd_resp.status_ = STATUS_ERROR;
+                        cmd_resp.description_ = "internal server error";
+                        std::string resp_str = cmd_resp.to_json();
                         LOG_EVENT("Status response: %s", resp_str.c_str());
                         return reply_cmd(resp_str);
                     }
@@ -382,22 +382,22 @@ namespace lightq {
                         consumer_conf.stream_type_ = stream;
                         consumer_conf.socket_connect_type_ = connection::bind_socket;
                         if (!it->second->init_consumer(consumer_conf)) {
-                            admin_cmd::common_resp resp;
-                            resp.cmd_ = req.cmd_;
-                            resp.status_ = STATUS_ERROR;
-                            resp.description_ = "Failed to initialize consumer endpoint for pull stream";
-                            std::string resp_str = resp.to_json();
+                            admin_cmd::common_resp cmd_resp;
+                            cmd_resp.cmd_ = req.cmd_;
+                            cmd_resp.status_ = STATUS_ERROR;
+                            cmd_resp.description_ = "Failed to initialize consumer endpoint for pull stream";
+                            std::string resp_str = cmd_resp.to_json();
                             LOG_EVENT("Status response: %s", resp_str.c_str());
                             return reply_cmd(resp_str);
                         }
                     }
                     if (!it->second->get_consumer()) {
                         LOG_ERROR("THis should not happend")
-                        admin_cmd::common_resp resp;
-                        resp.cmd_ = req.cmd_;
-                        resp.status_ = STATUS_ERROR;
-                        resp.description_ = "internal server error";
-                        std::string resp_str = resp.to_json();
+                        admin_cmd::common_resp cmd_resp;
+                        cmd_resp.cmd_ = req.cmd_;
+                        cmd_resp.status_ = STATUS_ERROR;
+                        cmd_resp.description_ = "internal server error";
+                        std::string resp_str = cmd_resp.to_json();
                         LOG_EVENT("Status response: %s", resp_str.c_str());
                         return reply_cmd(resp_str);
                     }
@@ -406,7 +406,7 @@ namespace lightq {
                     } else {
                         resp.bind_uri_ = it->second->get_consumer()->get_push_bind_uri();
                     }
-                    boost::replace_all(resp.bind_uri_, "*", "127.0.0.1");
+                    utils::replace(resp.bind_uri_, "*", "127.0.0.1");
                     std::string resp_str = resp.to_json();
                     LOG_EVENT("Status response: %s", resp_str.c_str());
                     return reply_cmd(resp_str);
