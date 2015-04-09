@@ -122,7 +122,7 @@ Broker Type: Durable (file)
     
 ##100 bytes, 10M messages
 
-Producer: (MPS 400000)
+Producer: (  400000 msg/sec, Bandwidth: 38.1470 MB)
 
     ./lightq-producer -m 10000000  -s 100 -n 1
     Topic[test_1], Producer: first message sent timestamp [4906704l]
@@ -131,7 +131,7 @@ Producer: (MPS 400000)
     Topic[test_1], Average messages sent per second [400000.00]
     Topic[test_1], Average bandwidth sent per second [38.1470] MB
     
-Consumer: (MPS: 400000, Latency: 2535 ns, Bandwidth: 38.1470 MB)
+Consumer: ( 400000 msg/sec, Latency: 2535 ns, Bandwidth: 38.1470 MB)
 
     ./lightq-consumer -c socket -m 10000000 -n 1
     Topic[test_1], First message:  producer start time [4906704], consumer start time [4906718]
@@ -145,7 +145,7 @@ Consumer: (MPS: 400000, Latency: 2535 ns, Bandwidth: 38.1470 MB)
     
 ##256 bytes, 10M messages
 
-Producer: (MPS 370370.38)
+Producer: ( 370370 msg/sec, Bandwidth: 90.4224 MB)
 
     ./lightq-producer -m 10000000  -s 256 -n 1
     Topic[test_1], Producer: first message sent timestamp [4783156l]
@@ -154,7 +154,7 @@ Producer: (MPS 370370.38)
     Topic[test_1], Average messages sent per second [370370.38]
     Topic[test_1], Average bandwidth sent per second [90.4224] MB
     
-Consumer: (MPS: 370370.38, Latency: 2783 ns, Bandwidth: 90.4224 MB)
+Consumer: ( 370370 msg/sec, Latency: 2783 ns, Bandwidth: 90.4224 MB)
 
     ./lightq-consumer -c socket -m 10000000 -n 1
     Topic[test_1], First message:  producer start time [4783156], consumer start time [4783163]
@@ -168,7 +168,7 @@ Consumer: (MPS: 370370.38, Latency: 2783 ns, Bandwidth: 90.4224 MB)
 
 ##512 bytes, 10M messages
 
-Producer: (MPS 322580.66, Bandwidth: 157.5101 MB)
+Producer: ( 322580 msg/sec, Bandwidth: 157.5101 MB)
 
     ./lightq-producer -m 10000000  -s 512 -n 1
     Topic[test_1], Producer: first message sent timestamp [4563339l]
@@ -177,7 +177,7 @@ Producer: (MPS 322580.66, Bandwidth: 157.5101 MB)
     Topic[test_1], Average messages sent per second [322580.66]
     Topic[test_1], Average bandwidth sent per second [157.5101] MB
     
-Consumer: (MPS: 322580.66, Latency: 3168 ns, Bandwidth: 157.5101 MB)
+Consumer: ( 322580 msg/sec, Latency: 3168 ns, Bandwidth: 157.5101 MB)
 
     ./lightq-consumer -c socket -m 10000000 -n 1
     Topic[test_1], First message:  producer start time [4563339], consumer start time [4563361]
@@ -191,7 +191,7 @@ Consumer: (MPS: 322580.66, Latency: 3168 ns, Bandwidth: 157.5101 MB)
     
 ##1024 bytes, 10M messages
 
-Producer: (MPS 270270.28, Bandwidth: 263.9358 MB)
+Producer: ( 270270 msg/sec, Bandwidth: 263.9358 MB)
 
     ./lightq-producer -m 10000000  -s 1024 -n 1
     Topic[test_1], Producer: first message sent timestamp [4319543l]
@@ -200,7 +200,7 @@ Producer: (MPS 270270.28, Bandwidth: 263.9358 MB)
     Topic[test_1], Average messages sent per second [270270.28]
     Topic[test_1], Average bandwidth sent per second [263.9358] MB
     
-Consumer: (MPS: 270270.28, Latency: 3779 ns, Bandwidth: 263.9358 MB)
+Consumer: ( 270270 msg/sec, Latency: 3779 ns, Bandwidth: 263.9358 MB)
 
     ./lightq-consumer -c socket -m 10000000 -n 1
     Topic[test_1], First message:  producer start time [4319543], consumer start time [4319564]
