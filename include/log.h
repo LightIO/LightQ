@@ -7,8 +7,9 @@
 
 #ifndef LOG_H
 #define	LOG_H
+#include <unistd.h>
 #include <sstream>
-#include <boost/format.hpp>
+//#include <boost/format.hpp>
 #include "thirdparty/spdlog/spdlog.h"
 
 
@@ -28,7 +29,21 @@
 #define stringify( name ) # name
 #define FORMAT_BUFFER_SIZE 8192
 
+#undef LOG_TRACE_IN
+#undef LOG_TRACE_OUT
+#undef LOG_TRACE
+#undef LOG_DEBUG
+#undef LOG_INFO
+#undef LOG_EVENT
+#undef LOG_WARNING
+#undef LOG_ERROR
+#undef LOG_CRITICAL
+#undef LOG_ALERT
+#undef LOG_EMERG
+#undef LOG_OFF
+
 namespace lightq {
+    
     //log class wrapper
     class log {
     public:
@@ -82,16 +97,21 @@ namespace lightq {
             std::istringstream ss(process_name);
             std::string token;
             std::vector<std::string> tokens;
+            tokens.reserve(10);
             while (std::getline(ss, token, '/')) {
                 tokens.push_back(token);
             }
-            logfile.append(tokens[tokens.size()-1]);
+            if(tokens.size() > 0) {
+                logfile.append(tokens[tokens.size()-1]);
+            }else {
+                logfile.append(process_name);
+            }
             logfile.append("_");
-            uint32_t pid = getpid();
+            //uint32_t pid = getpid();
             
             //initialize details logger
             std::string details_logfile(logfile);
-            details_logfile.append(std::to_string(pid));
+            details_logfile.append(std::to_string(PID));
             details_logfile.append(".log");
 #ifdef DEBUG
              auto lightq_logger = spdlog::stdout_logger_mt("lightq_logger");
@@ -105,7 +125,7 @@ namespace lightq {
             //initialize event logger
             std::string event_logfile(logfile);
             event_logfile.append("events_");
-            event_logfile.append(std::to_string(pid));
+            event_logfile.append(std::to_string(PID));
             event_logfile.append(".log");
             auto lightq_event_logger = spdlog::rotating_logger_mt("lightq_event_logger", event_logfile, 1048576 * 500, 10);
             //spdlog::set_async_mode(1048576); //queue size
@@ -125,20 +145,20 @@ namespace lightq {
      */
     static void log_write(int logtype, const char* file, unsigned int line,
             const char* func, const char *buf, ...) {
-        std::string msg;
+        
         va_list args;
         va_start(args, buf);
-        msg = lightq::log::format_arg_list(buf, args);
+        std::string msg(log::format_arg_list(buf, args));
         va_end(args);
-        std::string func_inout = func;
-        func_inout += "|";
+        std::string func_inout(func);
+        func_inout.append("|");
 
         if (logtype == log::LOG_TRACE_IN) {
-            func_inout += "-->IN|";
+            func_inout.append("-->IN|");
             logtype = log::LOG_TRACE;
         }
         else if (logtype == log::LOG_TRACE_OUT) {
-            func_inout += "<--OUT|";
+            func_inout.append("<--OUT|");
             logtype = log::LOG_TRACE;
         }
 
@@ -154,20 +174,27 @@ namespace lightq {
         uint64_t tid;
         pthread_threadid_np(NULL, &tid);
         
-
-        std::stringstream ss;
-        ss << boost::format("|%5d|%8X|%s:%u|%s%s") % PID % (tid & 0xffffffff) % filename % line % func_inout %msg;
+        char szBuf[FORMAT_BUFFER_SIZE];
+        szBuf[0] = '\0';
+        sprintf(szBuf,"|%5d|%8llX|%s:%u|%s%s", PID, (tid & 0xffffffff), filename, line, func_inout.c_str(), msg.c_str());
+     
         if(logtype == log::LOG_EVENT) {
-            event_logger()->notice(ss.str());
-        }
-        logger()->force_log((spdlog::level::level_enum)logtype,ss.str().c_str());
+            event_logger()->notice(szBuf);
+           // event_logger()->notice("|%5d|%8X|%s:%u|%s%s", PID, (tid & 0xffffffff), filename, line, func_inout.c_str(), msg.c_str());
         
+        }
+       
+        if(logger()->should_log((spdlog::level::level_enum)logtype)) {
+            logger()->force_log((spdlog::level::level_enum)logtype,szBuf);
+          //  logger()->force_log((spdlog::level::level_enum)logtype,"|%5d|%8X|%s:%u|%s%s", PID, (tid & 0xffffffff), filename, line, func_inout.c_str(), msg.c_str());
+        }
       
 #else
         if(logtype == log::LOG_EVENT) {
-            event_logger()->notice("|%5d|%8X|%s:%u|%s|%s", PID, TID, filename,line,func_inout.c_str(), msg.c_str());
-        }else {
-             logger()->notice("|%5d|%8X|%s:%u|%s|%s", PID, TID, filename,line,func_inout.c_str(), msg.c_str());
+            event_logger()->notice("|%5d|%8llX|%s:%u|%s|%s", PID, (TID & 0xffffffff), filename,line,func_inout.c_str(), msg.c_str());
+        }
+        if(logger()->should_log((spdlog::level::level_enum)logtype)) {
+            logger()->force_log((spdlog::level::level_enum)logtype,"|%5d|%8X|%s:%u|%s%s", PID, (TID & 0xffffffff), filename, line, func_inout.c_str(), msg.c_str());
         }
         
 #endif
