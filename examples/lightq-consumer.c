@@ -67,10 +67,13 @@ static void execute_consumer(void* p_con_info) {
         printf("topic[%s], Total message received [%llu] in [%.2f]sec\n", p_info->topic, p_info->messages_to_receive, total_time_sec);
         printf("topic[%s],Average messages received per second [%.2f]\n", p_info->topic, p_info->messages_to_receive / total_time_sec);
         printf("topic[%s],Average bandwidth received per second [%.4f]MB\n", p_info->topic, total_bytes_received / (1024 * 1024 * total_time_sec));
-        printf("topic[%s], Average latency[%2f]ms\n", p_info->topic, (end_time - producer_start_time)/p_info->messages_to_receive);
         printf("First message producer start time[%lu]\n", producer_start_time);
         printf("Consumer first message  start time[%lu]\n", start_time);
         printf("Consumer first message latency[%lu]ms\n", start_time - producer_start_time);
+        unsigned long consumer_end_to_producer_start_time = end_time - producer_start_time;
+        printf("topic[%s], consumer end to producer start time[%lu]\n", p_info->topic, consumer_end_to_producer_start_time);
+        printf("topic[%s], Average latency[%.2f]nano sec\n", p_info->topic, (double)((consumer_end_to_producer_start_time * 1000000/ p_info->messages_to_receive)));
+       
     } else {
         printf("Failed to initialize consumer\n");
     }
