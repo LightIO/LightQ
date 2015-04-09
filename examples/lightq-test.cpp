@@ -265,12 +265,12 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
     char buffer[utils::max_msg_size];
     bool socket_type_socket = false;
     if (socket_type == "socket") {
-            socket_type_socket = true;
+        socket_type_socket = true;
     }
     bool use_buffer = true;
     while (true) {
         if (socket_type_socket) {
-           
+
 
             connection_socket *p_conn_sock = (connection_socket*) p_pull_socket;
             //                ssize_t off_sent = p_conn_sock->send_offset(offset);
@@ -282,7 +282,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
             result = 0;
             while (result <= 0) {
                 buffer[0] = '\0';
-               //  if ((result = p_conn_sock->read_msg(message, false)) < 0) {
+                //  if ((result = p_conn_sock->read_msg(message, false)) < 0) {
                 if ((result = p_conn_sock->read_msg(buffer, utils::max_msg_size, false)) < 0) {
                     LOG_ERROR("Failed to read message");
                     std::cout << "Failed to read message" << std::endl;
@@ -291,7 +291,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
                     //  LOG_ERROR("timeout.reting after 1 ms");
                     s_sleep(5);
                 }
-                if(use_buffer)
+                if (use_buffer)
                     buffer[result] = '\0'; //remove last 4 bytes which is offset
 
             }
@@ -320,10 +320,10 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         if (counter == 1) {
             t1 = high_resolution_clock::now();
         }
-       // if(num_bytes_received > 2560000000) {
-       //     std::cout << " message:" << message<< std::endl;
-       // }
-        
+        // if(num_bytes_received > 2560000000) {
+        //     std::cout << " message:" << message<< std::endl;
+        // }
+
         if (msg_length) {
             if (use_buffer) {
                 LOG_TRACE("Received %s", buffer);
@@ -362,7 +362,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
 
 }
 
-void enabled_loglevel(const std::string& level) {
+static void enabled_loglevel(const std::string& level) {
     LOG_EVENT("Enabling log level : %s", level.c_str());
     log::event_logger()->set_level(spdlog::level::notice);
 
@@ -395,7 +395,7 @@ int main(int argc, char** argv) {
     //producer
     if (type == "producer") {
         if (argc < 2) {
-            std::cout << "Usage:" << argv[0] << "producer num_messages[1000000] msg_size[256] log_level[event] compress[false]" << std::cout;
+            std::cout << "Usage:" << std::string(argv[0]) << std::string("producer num_messages[1000000] msg_size[256] log_level[event] compress[false]") << std::endl;
             return 0;
         }
         uint64_t counter = 1000000;
@@ -421,7 +421,7 @@ int main(int argc, char** argv) {
 
     } else if (type == "consumer") {
         if (argc < 2) {
-            std::cout << "Usage:" << argv[0] << " consumer broker_type[queue/file] socket_type[zmq/socket] [log_level]" << std::cout;
+            std::cout << "Usage:" << std::string(argv[0]) << std::string(" consumer broker_type[queue/file] socket_type[zmq/socket] [log_level]") << std::endl;
             return 0;
         }
         std::string broker_type = "queue";
