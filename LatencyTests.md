@@ -20,97 +20,97 @@ Broker Type: Transient
     
 ##100 bytes, 10M messages
 
-Producer:
+Producer: ( 1250000 msg/sec,  Bandwidth: 119.2093 MB)
 
     ./lightq-producer -m 10000000  -n 1 -s 100
-    First message start time[44733954l]
-    Topic[test_1], Total message sent [10000000] in [7.00]sec
-    Topic[test_1], Average messages sent per second [1428571.38]
-    Topic[test_1], Average bandwidth sent per second [136.2392]MB
+    Topic[test_1], Producer: first message sent timestamp [6378502l]
+    Topic[test_1], Producer: last message sent timestamp [6386647l]
+    Topic[test_1], Total message sent [10000000] in [8.00] sec
+    Topic[test_1], Average messages sent per second [1250000.00]
+    Topic[test_1], Average bandwidth sent per second [119.2093] MB
     
-Consumer: (MPS: 1428571.38, Latency: 764 ns)
+Consumer: ( 1250000 msg/sec, Latency: 813 ns, Bandwidth: 119.2093 MB)
 
     ./lightq-consumer -m 10000000  -n 1
-    Consumer last message received consumer endtime[44741594]
-    topic[test_1], Total message received [10000000] in [7.00]sec
-    topic[test_1],Average messages received per second [1428571.38]
-    topic[test_1],Average bandwidth received per second [136.2392]MB
-    First message producer start time [44733954]
-    Consumer first message  start time [44733957]
-    Consumer first message latency [3]ms
-    topic[test_1], consumer end to producer start time [7640]
-    topic[test_1], Average latency [764.00] nano sec
+    Topic[test_1], First message:  producer start time [6378502], consumer start time [6378520]
+    Topic[test_1], Total message received [10000000] in [8.00]sec
+    Topic[test_1], Average messages received per second [1250000.00]
+    Topic[test_1], Total bytes received [999999907], average bandwidth received per second [119.2093]MB
+    Topic[test_1], Last Message: consumer endtime [6386632]
+    Topic[test_1], Consumer first message latency [18] ms
+    Topic[test_1], Consumer last message received -   producer first message sent timestamp [8130]
+    Topic[test_1], Average latency [813.00] nano sec
     
 
 ##256 bytes, 10M messages
 
-Producer:
+Producer: ( 1250000 msg/sec, Bandwidth: 305.1758 MB)
 
     ./lightq-producer -m 10000000  -n 1 -s 256
-    First message start time[52937210l]
-    Topic[test_1], Total message sent [10000000] in [8.00]sec
+    Topic[test_1], Producer: first message sent timestamp [5826133l]
+    Topic[test_1], Producer: last message sent timestamp [5834823l]
+    Topic[test_1], Total message sent [10000000] in [8.00] sec
     Topic[test_1], Average messages sent per second [1250000.00]
-    Topic[test_1], Average bandwidth sent per second [305.1758]MB
+    Topic[test_1], Average bandwidth sent per second [305.1758] MB
     
-Consumer: (MPS: 1250000, Latency: 874 ns)
+Consumer: ( 1250000 msg/sec, Latency: 868 ns, Bandwidth: 305.1758 MB)
 
     ./lightq-consumer -m 10000000  -n 1
-    Consumer last message received consumer endtime[52945952]
-    topic[test_1], Total message received [10000000] in [8.00]sec
-    topic[test_1],Average messages received per second [1250000.00]
-    topic[test_1],Average bandwidth received per second [305.1758]MB
-    First message producer start time [52937210]
-    Consumer first message  start time [52937216]
-    Consumer first message latency [6] ms
-    topic[test_1], consumer end to producer start time [8742]
-    topic[test_1], Average latency [874.00] nano sec
+    Topic[test_1], First message:  producer start time [5826133], consumer start time [5826155]
+    Topic[test_1], Total message received [10000000] in [8.00]sec
+    Topic[test_1], Average messages received per second [1250000.00]
+    Topic[test_1], Total bytes received [2559999751], average bandwidth received per second [305.1758]MB
+    Topic[test_1], Last Message: consumer endtime [5834813]
+    Topic[test_1], Consumer first message latency [22] ms
+    Topic[test_1], Consumer last message received - producer first message sent timestamp [8680]
+    Topic[test_1], Average latency [868.00] nano sec
     
 ##512 bytes, 10M messages
 
-Producer:
+Producer: ( 1000000 msg/sec,  Bandwidth: [488.2812 MB )
 
     ./lightq-producer -m 10000000  -n 1 -s 512
-    First message start time[52984331l]
-    Topic[test_1], Total message sent [10000000] in [10.00]sec
+    Topic[test_1], Producer: first message sent timestamp [6231211l]
+    Topic[test_1], Producer: last message sent timestamp [6241288l]
+    Topic[test_1], Total message sent [10000000] in [10.00] sec
     Topic[test_1], Average messages sent per second [1000000.00]
-    Topic[test_1], Average bandwidth sent per second [488.2812]MB
+    Topic[test_1], Average bandwidth sent per second [488.2812] MB
     
-Consumer: (MPS: 1000000, Latency: 1053 ns)
+Consumer: ( 1000000 msg/sec, Latency: 1006 ns, Bandwidth: [488.2812 MB )
 
     ./lightq-consumer -m 10000000  -n 1
-    Consumer last message received consumer endtime[52994866]
-    topic[test_1], Total message received [10000000] in [10.00]sec
-    topic[test_1],Average messages received per second [1000000.00]
-    topic[test_1],Average bandwidth received per second [488.2812]MB
-    First message producer start time [52984331]
-    Consumer first message  start time [52984334]
-    Consumer first message latency [3] ms
-    topic[test_1], consumer end to producer start time [10535]
-    topic[test_1], Average latency [1053.00] nano sec
+    Topic[test_1], First message:  producer start time [6231211], consumer start time [6231235]
+    Topic[test_1], Total message received [10000000] in [10.00]sec
+    Topic[test_1], Average messages received per second [1000000.00]
+    Topic[test_1], Total bytes received [5119999495], average bandwidth received per second [488.2812]MB
+    Topic[test_1], Last Message: consumer endtime [6241279]
+    Topic[test_1], Consumer first message latency [24] ms
+    Topic[test_1], Consumer last message received -   producer first message sent timestamp [10068]
+    Topic[test_1], Average latency [1006.00] nano sec
     
     
 ##1024 bytes, 10M messages
 
-Producer:
+Producer: ( 526315 msg/sec,  Bandwidth: 513.9802 MB)
 
     ./lightq-producer -m 10000000  -n 1 -s 1024
-    First message start time[53064370l]
-    Topic[test_1], Total message sent [10000000] in [19.00]sec
+    Topic[test_1], Producer: first message sent timestamp [6029718l]
+    Topic[test_1], Producer: last message sent timestamp [6049370l]
+    Topic[test_1], Total message sent [10000000] in [19.00] sec
     Topic[test_1], Average messages sent per second [526315.81]
-    Topic[test_1], Average bandwidth sent per second [513.9802]MB
+    Topic[test_1], Average bandwidth sent per second [513.9802] MB
     
-Consumer: (MPS: 526315.81, Latency: 1936 ns)
+Consumer: ( 526315 msg/sec, Latency: 1964 ns, Bandwidth: 513.9802 MB)
 
     ./lightq-consumer -m 10000000  -n 1
-    Consumer last message received consumer endtime[53083731]
-    topic[test_1], Total message received [10000000] in [19.00]sec
-    topic[test_1],Average messages received per second [526315.81]
-    topic[test_1],Average bandwidth received per second [513.9802]MB
-    First message producer start time [53064370]
-    Consumer first message  start time [53064378]
-    Consumer first message latency [8] ms
-    topic[test_1], consumer end to producer start time [19361]
-    topic[test_1], Average latency [1936.00] nano sec
+    Topic[test_1], First message:  producer start time [6029718], consumer start time [6029727]
+    Topic[test_1], Total message received [10000000] in [19.00]sec
+    Topic[test_1], Average messages received per second [526315.81]
+    Topic[test_1], Total bytes received [10239998983], average bandwidth received per second [513.9802]MB
+    Topic[test_1], Last Message: consumer endtime [6049366]
+    Topic[test_1], Consumer first message latency [9] ms
+    Topic[test_1], Consumer last message received -   producer first message sent timestamp [19648]
+    Topic[test_1], Average latency [1964.00] nano sec
    
 
 Broker Type: Durable (file) 
