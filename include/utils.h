@@ -7,35 +7,23 @@
 
 #ifndef UTILS_H
 #define	UTILS_H
+#include <netinet/in.h>
 #include <iostream>
 #include <zlib.h>
 #include <string>
 #include <chrono>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
 #include <vector>
 #include "log.h"
 using namespace std::chrono;
 namespace lightq {
 
-   
     class utils {
     public:
         enum message_size {
-            max_msg_size = 1024*1024,
+            max_msg_size = 1024 * 1024,
             max_small_msg_size = 256
-            
+
         };
-        
-        inline static uint32_t get_max_message_size() {
-            static uint32_t max_msg_size = 128*1024;
-            return max_msg_size;
-        }
-        
-        inline static uint32_t get_max_small_message_size() {
-            static uint32_t max_msg_size = 256;
-            return max_msg_size;
-        }
 
         inline static std::string format_str(const char * buf, ...) {
             va_list args;
@@ -43,6 +31,14 @@ namespace lightq {
             std::string msg = lightq::log::format_arg_list(buf, args);
             va_end(args);
             return msg;
+        }
+
+        static bool replace(std::string& str, const std::string& from, const std::string& to) {
+            size_t start_pos = str.find(from);
+            if (start_pos == std::string::npos)
+                return false;
+            str.replace(start_pos, from.length(), to);
+            return true;
         }
 
         /**
@@ -81,10 +77,10 @@ namespace lightq {
                 LOG_ERROR("Invalid uri %s", uri.c_str());
                 LOG_RET_FALSE("");
             }
-            port = boost::lexical_cast<uint32_t>(tokens[2]);
-           // tokens.clear();
+            port = (unsigned int) std::strtoul(tokens[2].c_str(), NULL, 10);
+            // tokens.clear();
             host = tokens[1];
-            boost::replace_all(host, "/", "");
+            utils::replace(host, "/", "");
 
             LOG_DEBUG("Converted %s to host: %s, port: %u", uri.c_str(), host.c_str(), port);
             LOG_RET_TRUE("");
@@ -105,6 +101,7 @@ namespace lightq {
             }
             return thread_id;
         }
+
         /**
          * thread id to string
          * @param id
@@ -143,7 +140,6 @@ namespace lightq {
             std::generate_n(str.begin(), length, randchar);
             return std::move(str);
         }
-       
 
         /**
          * compress zlib data
@@ -227,7 +223,7 @@ namespace lightq {
             int res = inflateInit(&d_stream);
             if (res != Z_OK) {
                 LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                 LOG_RET_FALSE("zlib error");
+                LOG_RET_FALSE("zlib error");
             }
 
             d_stream.avail_in = in_data_size;
@@ -249,7 +245,7 @@ namespace lightq {
 
                 if (res != Z_OK) {
                     LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                     LOG_RET_FALSE("zlib error");
+                    LOG_RET_FALSE("zlib error");
                 }
 
 
@@ -259,7 +255,7 @@ namespace lightq {
             res = inflateEnd(&d_stream);
             if (res != Z_OK) {
                 LOG_ERROR("Error: %s", zlib_error_str(res).c_str());
-                 LOG_RET_FALSE("zlib error");
+                LOG_RET_FALSE("zlib error");
             }
 
             LOG_RET_TRUE("success");
@@ -285,15 +281,15 @@ namespace lightq {
                 result = read(fd, buffer + bytesRead, bytestoRead);
 
                 if (result < 0) {
-                     LOG_ERROR("Failed  to read size Err: %d, ErrDesc: %s",
-                       errno, strerror(errno));
-                    if(errno == EAGAIN || errno == EWOULDBLOCK) {
+                    LOG_ERROR("Failed  to read size Err: %d, ErrDesc: %s",
+                            errno, strerror(errno));
+                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
                         LOG_RET("", 0);
-                    }else {
+                    } else {
                         LOG_ERROR("Failed to read length of the message");
                         LOG_RET("Error:", -1);
                     }
-                }else if (result == 0) {
+                } else if (result == 0) {
                     LOG_RET("no data to read", 0);
                 }
                 bytestoRead -= result;
@@ -328,7 +324,7 @@ namespace lightq {
             ssize_t result = -1;
 
             while (bytestoRead > 0) {
-                result = read(fd, buffer + bytesRead, bytestoRead);
+                result = read(fd, (void*)(buffer + bytesRead), bytestoRead);
                 //if failed to read
                 if (result < 0) {
                     //if read some of the buffer
@@ -398,27 +394,27 @@ namespace lightq {
             LOG_RET("Success", bytes_written);
         }
 
-       /**
-        * read line
-        * @param fd
-        * @param buffer
-        * @param buf_size
-        * @return 
-        */
+        /**
+         * read line
+         * @param fd
+         * @param buffer
+         * @param buf_size
+         * @return 
+         */
         static ssize_t read_line(int fd, char* buffer, uint32_t buf_size) {
-           
-            if(buf_size == 0 || buffer == NULL) {
+
+            if (buf_size == 0 || buffer == NULL) {
                 return 0;
             }
-            
-            
+
+
             ssize_t numRead; /* # of bytes fetched by last read() */
             size_t totRead; /* Total bytes read so far */
-            
-           
+
+
             char ch;
             bool found_r = false;
-            
+
 
             totRead = 0;
             for (;;) {
@@ -453,6 +449,19 @@ namespace lightq {
 
             *buffer = '\0';
             return totRead;
+        }
+
+        /**
+         * create topic id from topic and partition
+         * @param topic
+         * @param partition
+         * @return 
+         */
+        static std::string create_topic_id(const std::string& topic, unsigned partition) {
+            std::string topic_id(topic);
+            topic_id.append("_");
+            topic_id.append(std::to_string(partition));
+            return std::move(topic_id);
         }
     private:
 
