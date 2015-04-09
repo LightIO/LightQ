@@ -121,6 +121,12 @@ typedef int bool;
     bool set_loglevel(lightq_loglevel level);
     
     lightq_producer_conn* init_producer(const char* userid, const char* password, const char* topic, const char* broker_uri);
+    
+    /**
+     * Free producer connection
+     * @param producer_conn
+     */
+    void free_producer_conn( lightq_producer_conn* producer_conn);
     /**
      * Initialize producer
      * @param topic
@@ -137,6 +143,12 @@ typedef int bool;
      * @return 
      */
     lightq_consumer_conn* init_consumer(const char* userid, const char* password, const char* topic, const char* broker_uri, consumer_socket_type type DEFAULT_VALUE(consumer_socket_type::zmq_consumer));
+    
+    /**
+     * free consumer connection
+     * @param consumer_conn
+     */
+    void free_consumer_conn(lightq_consumer_conn* consumer_conn);
     /**
      * Receive message - consumer
      * @param conn
@@ -144,7 +156,7 @@ typedef int bool;
      * @param buffer_length
      * @return 
      */
-    int receive_message(lightq_consumer_conn* p_consumer_conn, char* buffer, uint32_t buffer_length);
+    int receive_message(lightq_consumer_conn* p_consumer_conn,  char* buffer, uint32_t buffer_length);
     /**
      * Get stats 
      * @param conn
@@ -172,6 +184,11 @@ typedef int bool;
             const char* bind_ip, unsigned bind_port);
     
     /**
+     * Free broker manager
+     * @param broker_mgr
+     */
+    void free_broker_mgr(lightq_broker_mgr *broker_mgr);
+    /**
      * Run broker.  This is a blocking call if block is enabled
      * @param broker
      * @param block using it's own thread
@@ -190,7 +207,7 @@ typedef int bool;
     * @param storage_type
     * @return 
     */
-   bool create_topic(const char* broker_uri, const char* topic, const char* admin_userid, const char* admin_password, 
+   bool create_topic(const char* broker_uri, const char* topic,  const char* admin_userid, const char* admin_password, 
         const char* userid, const char* password, broker_storage_type storage_type);
     
     
