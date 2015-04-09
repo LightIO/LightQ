@@ -98,6 +98,16 @@ namespace lightq {
          * @return 
          */
         virtual  ssize_t read_msg(std::string& message) = 0;
+        
+        
+         /**
+         * read message
+         * @param message
+         * @return 
+         */
+
+        
+        virtual  ssize_t read_msg(char* buffer, uint32_t buffer_length, bool ntohl = false) = 0 ;
 
         
         /**
@@ -118,7 +128,7 @@ namespace lightq {
          * get topic
          * @return 
          */
-        inline const std::string& topic() const {
+        inline const std::string& get_topic() const {
             return topic_;
         }
         
