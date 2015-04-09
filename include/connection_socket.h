@@ -486,7 +486,7 @@ namespace lightq {
             return read_msg(message, false);
         }
         
-        ssize_t read_msg(char*message, uint32_t length, bool ntohl = false) {
+        ssize_t read_msg(char* message, uint32_t length, bool ntohl = false) {
             if(endpoint_type_ == endpoint_type::conn_consumer && socket_connect_type_ == socket_connect_type::connect_socket) {
                 LOG_DEBUG("Client socket type.");
                 return client_socket_read_msg(message, length,ntohl);
