@@ -450,7 +450,7 @@ bool get_stats(lightq_conn* p_lightq_conn, topic_stats* stats) {
             strcpy(stats->status, "error");
             LOG_RET_FALSE("Failed");
         }
-        std::cout << "Stats Response:" << response << std::endl;
+      //  std::cout << "Stats Response:" << response << std::endl;
         stats->messages_received = resp.messages_received_;
         stats->messages_sent = resp.messages_sent_;
         stats->publishers_count = resp.publishers_count_;
