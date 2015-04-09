@@ -39,7 +39,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
         LOG_ERROR("Failed to initialize producer for admin connection");
         return;
     }
-    sleep(2);
+    utils::sleep_ms(utils::zmq_sync_wait);
 
     std::string response;
     admin_cmd::join_req req;
@@ -73,7 +73,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
         LOG_ERROR("Failed to initialize producer push connection");
         return;
     }
-    sleep(2); //wait for successful connection
+    utils::sleep_ms(utils::zmq_sync_wait); //wait for successful connection
     std::string message = utils::random_string(payload_size);
     LOG_ERROR("Random generated string: size: %u,  %s", message.length(), message.c_str());
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -112,7 +112,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             break;
         } else {
             LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
-            s_sleep(1000); //wait 1 sec
+            utils::sleep_ms(utils::zmq_sync_wait); //wait 1 sec
         }
     }
 
@@ -142,9 +142,9 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
             }
             if (resp.queue_size_ > 10000) {
                 LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
-                s_sleep(resp.queue_size_ / 1000);
+                utils::sleep_ms(resp.queue_size_ / 1000);
             } else if (last_queue_size < resp.queue_size_) {
-                s_sleep((resp.queue_size_ - last_queue_size) / 100);
+                utils::sleep_ms((resp.queue_size_ - last_queue_size) / 100);
             }
             last_queue_size = resp.queue_size_;
 
@@ -182,11 +182,11 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
         LOG_EVENT("Stats :%s ", response.c_str());
         LOG_DEBUG("Stats :%s ", response.c_str());
         std::cout << "Stats : " << response << std::endl;
-        sleep(10);
+        utils::sleep_ms(10*1000);
     }
 
 
-    sleep(50000);
+    utils::sleep_ms(500000);
     LOG_OUT("");
 
 }
@@ -203,7 +203,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         LOG_ERROR("Failed to initialize producer for admin connection");
         return;
     }
-    sleep(2);
+    utils::sleep_ms(utils::zmq_sync_wait);
     std::string response;
     admin_cmd::join_req req;
     req.connection_type_ = socket_type;
@@ -254,7 +254,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         }
     }
     //  std::cout << "Waiting for 10 seconds" << std::endl;
-    sleep(1); //wait for successful connection
+    utils::sleep_ms(utils::zmq_sync_wait); //wait for successful connection
     std::string message;
     message.reserve(utils::max_msg_size);
     uint64_t counter = 0;
@@ -289,7 +289,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
                     continue;
                 } else if (result == 0) {
                     //  LOG_ERROR("timeout.reting after 1 ms");
-                    s_sleep(5);
+                   utils::sleep_ms(utils::zmq_sync_wait * 5);
                 }
                 if (use_buffer)
                     buffer[result] = '\0'; //remove last 4 bytes which is offset
@@ -302,7 +302,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
                 continue;
             } else if (result == 0) {
                 //  LOG_ERROR("timeout.reting after 1 ms");
-                s_sleep(1);
+              utils::sleep_ms(utils::queue_poll_wait);
             }
         }
 
