@@ -55,24 +55,24 @@ static void execute_consumer(void* p_con_info) {
                 start_time = get_current_time_millsec();
                 buffer[bytes_received] = '\0';
                 producer_start_time = strtoul(buffer, NULL, 10);
-               
+                printf("Topic[%s], First message:  producer start time [%lu], consumer start time [%lu] \n", p_info->topic, producer_start_time, start_time);
+        
                 
             }
         }
 
         end_time = get_current_time_millsec();
-        printf("Consumer last message received consumer endtime[%lu]\n", end_time);
+       
         unsigned total_time_ms = end_time - start_time;
         float total_time_sec = total_time_ms / 1000;
-        printf("topic[%s], Total message received [%llu] in [%.2f]sec\n", p_info->topic, p_info->messages_to_receive, total_time_sec);
-        printf("topic[%s],Average messages received per second [%.2f]\n", p_info->topic, p_info->messages_to_receive / total_time_sec);
-        printf("topic[%s],Average bandwidth received per second [%.4f]MB\n", p_info->topic, total_bytes_received / (1024 * 1024 * total_time_sec));
-        printf("First message producer start time[%lu]\n", producer_start_time);
-        printf("Consumer first message  start time[%lu]\n", start_time);
-        printf("Consumer first message latency[%lu]ms\n", start_time - producer_start_time);
+        printf("Topic[%s], Total message received [%llu] in [%.2f]sec\n", p_info->topic, p_info->messages_to_receive, total_time_sec);
+        printf("Topic[%s], Average messages received per second [%.2f]\n", p_info->topic, p_info->messages_to_receive / total_time_sec);
+        printf("Topic[%s], Total bytes received [%llu], average bandwidth received per second [%.4f]MB\n", p_info->topic, total_bytes_received, total_bytes_received / (1024 * 1024 * total_time_sec));
+        printf("Topic[%s], Last Message: consumer endtime [%lu]\n", p_info->topic, end_time);
+        printf("Topic[%s], Consumer first message latency [%lu] ms\n", p_info->topic, start_time - producer_start_time);
         unsigned long consumer_end_to_producer_start_time = end_time - producer_start_time;
-        printf("topic[%s], consumer end to producer start time[%lu]\n", p_info->topic, consumer_end_to_producer_start_time);
-        printf("topic[%s], Average latency[%.2f]nano sec\n", p_info->topic, (double)((consumer_end_to_producer_start_time * 1000000/ p_info->messages_to_receive)));
+        printf("Topic[%s], Consumer last message received -   producer first message sent timestamp [%lu]\n", p_info->topic, consumer_end_to_producer_start_time);
+        printf("Topic[%s], Average latency [%.2f] nano sec\n", p_info->topic, (double)((consumer_end_to_producer_start_time * 1000000/ p_info->messages_to_receive)));
        
     } else {
         printf("Failed to initialize consumer\n");
