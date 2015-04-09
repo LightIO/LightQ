@@ -147,7 +147,7 @@ namespace lightq {
             LOG_IN("message:%s", message.c_str());
             try {
                  if(get_zmq_connect_type() == ZMQ_PUB) {
-                   s_sendmore(*p_socket_, topic_, true);
+                   s_sendmore(*p_socket_, topic_, false);
                  }
                 
                 if (s_send(*p_socket_, message, false)) {
@@ -175,10 +175,10 @@ namespace lightq {
             LOG_IN("message:%p", message);
             try {
                  if(get_zmq_connect_type() == ZMQ_PUB) {
-                   s_sendmore(*p_socket_, topic_, true);
+                   s_sendmore(*p_socket_, topic_, false);
                  }
                 
-                if (s_send(*p_socket_, message, length, true)) {
+                if (s_send(*p_socket_, message, length, false)) {
                     total_bytes_written_ += length;
                     total_msg_written_ += 1;
                     LOG_RET("Successfully send message", length);
@@ -213,18 +213,16 @@ namespace lightq {
          * @param message
          * @return 
          */
-        ssize_t read_msg(std::string& message) {
-            message.clear();
-            LOG_IN("message: %s", message.c_str());
+        ssize_t read_msg(std::string& message) {          
+            LOG_IN("");
             try {
                 
-                message = s_recv(*p_socket_);
+                ssize_t received_bytes = s_recv(*p_socket_, message);
                 //                zmq::message_t zmq_msg;             
                 //                if(!p_socket_->recv(&zmq_msg, 0)) {
                 //                    LOG_RET("Failed to read. try again", 0)
                 //                }
-                LOG_DEBUG("Received: size %d", message.size());
-                message.assign(static_cast<const char*> (message.data()), message.size());
+                LOG_DEBUG("Received: size %d", received_bytes);
                 LOG_TRACE("Received %s", message.c_str());
                 total_bytes_read_ += message.length();
                 ++total_msg_read_;
@@ -244,9 +242,9 @@ namespace lightq {
          * @param size
          * @return 
          */
-        ssize_t read_msg(char* buffer, unsigned size) {
-            LOG_IN("buffer: %p , size:%u", buffer, size);
-            ssize_t nbytes = p_socket_->recv(buffer, size, 0);
+        ssize_t read_msg(char* buffer, uint32_t size, bool ntohl = false) {
+            LOG_IN("buffer: %p , size:%u, ntohl[%d]", buffer, size, ntohl);
+            ssize_t nbytes = p_socket_->recv((void*)buffer, size, 0);
             if (nbytes >= 0) {
                 total_bytes_read_ += nbytes;
                 ++total_msg_read_;
