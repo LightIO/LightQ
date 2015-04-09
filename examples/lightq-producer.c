@@ -43,7 +43,7 @@ static void execute_publisher(void* p_pub) {
             if(i == 0) {
                sprintf(buffer, "%lu", start_time);
                bytes_sent = publish_message(pub->p_producer, buffer, strlen(buffer));
-               printf("First message star time[%ul]\n", start_time);
+               printf("First message start time[%ul]\n", start_time);
             }else {
                 bytes_sent = publish_message(pub->p_producer, buffer, pub->message_size);
             }
@@ -161,8 +161,8 @@ int main(int argc, char** argv) {
          int err = pthread_create(&(tid[i]), NULL, (void*)&execute_publisher, (void*)&pubs[i]);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
-        else
-            printf("\n Thread created successfully\n");
+       // else
+       //     printf("\n Thread created successfully\n");
     }
      for(unsigned i = 0; i < num_partitions; ++i) {
          pthread_join(tid[i], NULL);
