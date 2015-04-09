@@ -103,9 +103,9 @@ namespace lightq {
             }
            
             
-            
- #ifdef __APPLE__
             off_t size_offset = size;
+ #ifdef __APPLE__
+            
             LOG_DEBUG("Reading %llu  bytes from offset[%llu]", size, offset);
            ssize_t result =  sendfile(fd_, socket, offset, &size_offset, NULL, 0);
            if(result == 0 || result == EAGAIN) {
@@ -117,7 +117,7 @@ namespace lightq {
                    fd_, socket, result, strerror(result));
            LOG_RET("failed", -1);
 #else
-           ssize_t result = sendfile(socket, fd_, &offset, size);
+           ssize_t result = sendfile(socket, fd_, &size_offset, size);
            if(result >= 0 ) {
                LOG_RET("success", result);
            }else if(result == EAGAIN) {
@@ -215,7 +215,7 @@ namespace lightq {
 #ifdef __APPLE__
             fsync(fd_);
 #else
-            fdatasync(f.fd_);
+            fdatasync(fd_);
 #endif
             ::close(fd_);
             fd_ = -1;
@@ -231,7 +231,7 @@ namespace lightq {
 #ifdef __APPLE__
             fsync(fd_);
 #else
-            fdatasync(f.fd_);
+            fdatasync(fd_);
 #endif
             LOG_EVENT("File[%s] is flushed to disk", file_name_.c_str());
             LOG_OUT("");
