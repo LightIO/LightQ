@@ -30,17 +30,17 @@ namespace lightq {
 
         connection_socket(const std::string& topic,
                 const std::string& uri,
-                endpoint_type endpoint_type,
-                connection::socket_connect_type socket_connect_type = connection::bind_socket,
+                endpoint_type ep_type,
+                connection::socket_connect_type connect_type = connection::bind_socket,
                 bool non_blocking = false,
                 bool client_pull=false) :
-                client_pull_(client_pull),
-        connection(topic, uri, connection::stream_socket,
-        endpoint_type,
-        socket_connect_type,
-        non_blocking) {
+                connection(topic, uri, connection::stream_socket,
+                    ep_type,
+                    connect_type,
+                    non_blocking),
+                client_pull_(client_pull){
 
-            LOG_IN("topic: %s, uri: %s, endpoint_type: %d", topic.c_str(), uri.c_str(), endpoint_type);
+            LOG_IN("topic: %s, uri: %s, endpoint_type: %d", topic.c_str(), uri.c_str(), ep_type);
             socket_ = -1;
             listen_fd_ = -1;
             stop_ = false;
@@ -141,7 +141,7 @@ namespace lightq {
                 LOG_ERROR("Failed to get the host and port from resource_uri_: %s", resource_uri_.c_str());
                 LOG_RET_FALSE("failed");
             }
-            // boost::replace_all(host_, "*", "127.0.0.1");
+            // utils::replace(host_, "*", "127.0.0.1");
             LOG_DEBUG("Binding to host[%s], Port[%d]", host_.c_str(), port_);
 
             struct sockaddr_in serv_addr;
@@ -418,12 +418,12 @@ namespace lightq {
             buffer_[0] = '\0';
             uint32_t size_to_read = result;
             if(size_to_read > utils::max_msg_size) {
-                size_to_read = size_to_read;
+                size_to_read = utils::max_msg_size;
             }
             
             result = 0;
             while (result <= 0) {
-                result = utils::read_buffer(socket_, buffer_, utils::max_msg_size, size_to_read);
+                result = utils::read_buffer(socket_, (char*&)buffer_, utils::max_msg_size, size_to_read);
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", socket_);
 
@@ -443,7 +443,7 @@ namespace lightq {
 
         }
         
-        ssize_t client_socket_read_msg(char* message, unsigned length, bool ntohl = false) {
+        ssize_t client_socket_read_msg(char* msg_buffer, unsigned length, bool ntohl = false) {
             LOG_IN("");
             
             LOG_DEBUG("Reading size from socket[%d]", socket_);
@@ -459,11 +459,11 @@ namespace lightq {
                 }
             }
             LOG_DEBUG("Received  size  to read[ %u]", result);
-            message[0] = '\0';
+            msg_buffer[0] = '\0';
             uint32_t size_to_read = result;
             result = 0;
             while (result <= 0) {
-                result = utils::read_buffer(socket_, message, length, size_to_read);
+                result = utils::read_buffer(socket_, msg_buffer, length, size_to_read);
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", socket_);
 
@@ -486,7 +486,7 @@ namespace lightq {
             return read_msg(message, false);
         }
         
-        ssize_t read_msg(char* message, unsigned length, bool ntohl = false) {
+        ssize_t read_msg(char*message, uint32_t length, bool ntohl = false) {
             if(endpoint_type_ == endpoint_type::conn_consumer && socket_connect_type_ == socket_connect_type::connect_socket) {
                 LOG_DEBUG("Client socket type.");
                 return client_socket_read_msg(message, length,ntohl);
@@ -495,7 +495,7 @@ namespace lightq {
             LOG_RET("Not implemented", -1);
         }
 
-        ssize_t read_msg(std::string& message, bool ntohl = false) {
+        ssize_t read_msg(std::string& message, bool ntohl ) {
             LOG_IN("");
             ssize_t result = -1;
             
@@ -512,7 +512,7 @@ namespace lightq {
                 LOG_DEBUG("Current fd index [%d],  fd[%d]", current_fd_index_, fds_[current_fd_index_]);
                 if (endpoint_type_ != endpoint_type::conn_broker) {
                     LOG_DEBUG("Reading siz from fd[%d]", fds_[current_fd_index_]);
-                    ssize_t result = utils::read_size(fds_[current_fd_index_], ntohl);
+                     result = utils::read_size(fds_[current_fd_index_], ntohl);
                     if (result < 0) {
                         LOG_ERROR("Failed to write payload size to socket :%d", fds_[current_fd_index_]);
                         remove_fd(current_fd_index_);
@@ -526,7 +526,7 @@ namespace lightq {
                     buffer_[0] = '\0';
                     result = 0;
                     while (result <= 0) {
-                        result = utils::read_buffer(fds_[current_fd_index_], buffer_, utils::max_msg_size, result);
+                        result = utils::read_buffer(fds_[current_fd_index_], (char*&)buffer_, utils::max_msg_size, result);
                         if (result == -1) {
                             LOG_ERROR("Failed to write to socket :%d", fds_[current_fd_index_]);
                             remove_fd(current_fd_index_);
@@ -646,10 +646,10 @@ namespace lightq {
         }
 
         int socket_;
-        uint64_t total_msg_written_;
-        uint64_t total_msg_read_;
-        uint64_t total_bytes_written_;
-        uint64_t total_bytes_read_;
+      //  uint64_t total_msg_written_;
+      //  uint64_t total_msg_read_;
+      //  uint64_t total_bytes_written_;
+      //  uint64_t total_bytes_read_;
         int listen_fd_;
         std::string host_;
         uint32_t port_;
@@ -658,7 +658,7 @@ namespace lightq {
         std::vector<int> fds_;
         uint64_t current_write_offset_;
         unsigned current_fd_index_;
-        process_fd_callback process_fd_callback_;
+       // process_fd_callback process_fd_callback_;
         char buffer_[utils::max_msg_size]; //128*1024 not thread safe
         bool client_pull_;
         broker_storage *p_storage_;
