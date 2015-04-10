@@ -57,12 +57,23 @@ namespace lightq {
             return std::string("uncommment");
             
         }
+        
+        std::string get_broker_type_to_str() {
+            switch(broker_type_) {
+                case broker_type::broker_direct : return "direct";
+                case broker_type::broker_file : return "file";
+                case broker_type::broker_queue_file : return "queue_file";
+                default:
+                   case broker_type::broker_queue : return "queue"; 
+            }
+            return "queue";
+        }
         /**
          * get next port
          * @param initial_port
          * @return 
          */
-        static unsigned get_next_port(unsigned initial_port=5000) {
+        inline static unsigned get_next_port(unsigned initial_port=5000) {
             static unsigned port = initial_port;
             return port++;
         }
