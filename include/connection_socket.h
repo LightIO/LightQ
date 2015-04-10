@@ -32,7 +32,7 @@ namespace lightq {
                 const std::string& uri,
                 endpoint_type ep_type,
                 connection::socket_connect_type connect_type = connection::bind_socket,
-                bool non_blocking = false,
+                bool non_blocking = true,
                 bool client_pull=false) :
                 connection(topic, uri, connection::stream_socket,
                     ep_type,
@@ -407,11 +407,11 @@ namespace lightq {
                     LOG_RET("error", -1);
                 } else if (result == 0) {
                     LOG_DEBUG("no data available to read :%d", socket_);
-                    s_sleep(20);
+                    utils::sleep_ms(utils::queue_poll_wait);
                 }else if(result > utils::max_msg_size) {
                     LOG_ERROR("This should not happen. Size to read [%lld]", result);
                     result = 0;
-                    s_sleep(20);
+                    utils::sleep_ms(utils::queue_poll_wait);
                 }
             }
             LOG_DEBUG("Received  size  to read[ %u]", result);
@@ -423,7 +423,7 @@ namespace lightq {
             
             result = 0;
             while (result <= 0) {
-                result = utils::read_buffer(socket_, (char*&)buffer_, utils::max_msg_size, size_to_read);
+                result = utils::read_buffer(socket_, (char*)buffer_, utils::max_msg_size, size_to_read);
                 if (result == -1) {
                     LOG_ERROR("Failed to write to socket :%d", socket_);
 
@@ -431,7 +431,7 @@ namespace lightq {
                 }
                 if (result == 0) {
                     LOG_DEBUG("read timeout.  Trying again..");
-                    s_sleep(20);
+                    utils::sleep_ms(utils::queue_poll_wait);
                 }
             }
             if(result > 0) {
@@ -471,7 +471,7 @@ namespace lightq {
                 }
                 if (result == 0) {
                     LOG_DEBUG("read timeout.  Trying again..");
-                    s_sleep(20);
+                   utils::sleep_ms(utils::queue_poll_wait);
                 }
             }
             LOG_DEBUG("Received bytes [ %u]", result);
@@ -535,7 +535,7 @@ namespace lightq {
                         }
                         if (result == 0) {
                             LOG_DEBUG("read timeout.  Trying again..");
-                            s_sleep(2000);
+                            utils::sleep_ms(utils::queue_poll_wait);
                         }
                     }
                 } else {
@@ -548,7 +548,7 @@ namespace lightq {
                     //don't increment because we failed so next would be next element
                 } else if (result == 0) {
                     ++current_fd_index_;
-                    LOG_DEBUG("Received zeobyte");
+                    LOG_DEBUG("Received zerobyte");
                     continue;
                 } else {
                     ++current_fd_index_;
@@ -556,7 +556,7 @@ namespace lightq {
                     message.swap(s);
                     LOG_RET("success", result);
                 }
-                s_sleep(5);
+                utils::sleep_ms(utils::queue_poll_wait);
 
             }
             return 0;
