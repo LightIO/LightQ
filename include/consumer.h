@@ -176,14 +176,14 @@ namespace lightq {
                     if (p_consumer_socket_->get_stream_type() == connection::stream_type::stream_socket) {
                          connection_socket* psocket = (connection_socket*)p_consumer_socket_;
                          while (p_storage_->get_file_total_bytes_written() < psocket->get_write_offset() + sizeof(uint32_t)) {
-                            s_sleep(10); //define magic number fixme
+                            utils::sleep_ms(utils::queue_poll_wait); //define magic number fixme
                         }
                          LOG_DEBUG("Data are available for read");
                         result = sendfile_to_socket();
                     
                     }else {
                         while (p_storage_->get_file_total_bytes_written()  <= p_storage_->get_total_bytes_read()  + sizeof(uint32_t)) {
-                            s_sleep(10); //define magic number fixme may be implement condition variabl
+                            utils::sleep_ms(utils::queue_poll_wait); //define magic number fixme may be implement condition variabl
                         }
                         LOG_TRACE("file_total_bytes_written[%lld], file_total_bytes_read[%lld]",
                                p_storage_->get_file_total_bytes_written(), p_storage_->get_total_bytes_read() );
@@ -193,7 +193,7 @@ namespace lightq {
 
                 } else if (p_storage_->get_broker_type() == broker_config::broker_queue) {
                      while (p_storage_->get_queue_size() <= 0 ) {
-                        s_sleep(10); //define magic number fixme
+                        utils::sleep_ms(utils::queue_poll_wait); //define magic number fixme
                     }
                      
                     result = p_storage_->get_message_from_queue(message);
@@ -222,7 +222,7 @@ namespace lightq {
                 }
                 
                 if(result == 0) {
-                    s_sleep(10);
+                   utils::sleep_ms(utils::queue_poll_wait);
                 }
             }
             LOG_OUT("");
