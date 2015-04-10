@@ -59,9 +59,7 @@
 #define within(num) (int) ((float) (num) * rand () / (RAND_MAX + 1.0))
 #endif
 
-static void dont_free (void *data, void *hint) {
-   //we are not freeing data as it is owned by application
-}
+
 //  Receive 0MQ string from socket and convert into string
 static std::string
 s_recv (zmq::socket_t & socket) {
@@ -76,6 +74,7 @@ unsigned s_recv (zmq::socket_t & socket, std::string& buffer) {
 
     zmq::message_t message;
     socket.recv(&message);
+    buffer.clear();
     buffer.assign(static_cast<char*>(message.data()), message.size());
    
     return message.size();
@@ -85,7 +84,7 @@ unsigned s_recv (zmq::socket_t & socket, std::string& buffer) {
 static bool
 s_send (zmq::socket_t & socket, const std::string & string, bool zerocopy=false) {
     if(zerocopy) {
-        zmq::message_t message((void *)string.data(), string.size(), dont_free, NULL);
+        zmq::message_t message((void *)string.data(), string.size(), NULL, NULL);
         return socket.send (message);
     }else {
         zmq::message_t message(string.size());
@@ -99,7 +98,7 @@ s_send (zmq::socket_t & socket, const std::string & string, bool zerocopy=false)
 static bool
 s_send (zmq::socket_t & socket, const char* buffer, unsigned length, bool zerocopy=false) {
     if(zerocopy) {
-         zmq::message_t message((void *)buffer, length, dont_free, NULL);
+         zmq::message_t message((void *)buffer, length, NULL, NULL);
         return socket.send (message);
     }else {
         zmq::message_t message(length);
@@ -112,18 +111,16 @@ s_send (zmq::socket_t & socket, const char* buffer, unsigned length, bool zeroco
 static bool
 s_sendmore (zmq::socket_t & socket, const std::string & string, bool zerocopy=false) {
 
-    
     zmq::message_t *pmessage = NULL;
     if(zerocopy) {
-         pmessage = new  zmq::message_t ((void *)string.c_str(), string.length(), dont_free, NULL);
+        zmq::message_t  message ((void *)string.c_str(), string.length(), NULL, NULL);
+        return socket.send (message, ZMQ_SNDMORE);
     }else {
-       pmessage = new  zmq::message_t(string.size());
-       memcpy (pmessage->data(), string.data(), string.size());
+       zmq::message_t message(string.size());
+       memcpy (message.data(), string.data(), string.size());
+       return socket.send (message, ZMQ_SNDMORE);
     }
 
-    bool rc = socket.send (*pmessage, ZMQ_SNDMORE);
-    delete pmessage;
-    return (rc);
 }
 
 //  Receives all message parts from socket, prints neatly
