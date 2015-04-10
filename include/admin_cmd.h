@@ -204,6 +204,8 @@ namespace lightq {
 
         struct stats_resp {
             const std::string cmd_str = "cmd";
+            const std::string topic_str = "topic";
+            const std::string topic_type_str = "topic_type";
             const std::string status_str = "status";
             const std::string queue_size_str = "queue_size";
             const std::string messages_sent_str = "messages_sent";
@@ -215,6 +217,7 @@ namespace lightq {
             const std::string cmd_ = "stats";
             std::string status_;
             std::string topic_;
+            std::string topic_type_;
             int64_t queue_size_;
             int64_t messages_sent_;
             int64_t messages_received_;
@@ -225,6 +228,7 @@ namespace lightq {
             
             stats_resp() {
                 status_ = "";
+                topic_type_ = "";
                 topic_ = "";
                 queue_size_ = 0;
                 messages_sent_ = 0;
@@ -238,6 +242,8 @@ namespace lightq {
             std::string to_json() {
                 picojson::value::object obj;
                 obj[cmd_str] = picojson::value(cmd_);
+                obj[topic_str] = picojson::value(topic_);
+                obj[topic_type_str] = picojson::value(topic_type_);
                 obj[status_str] = picojson::value(status_);
                 obj[queue_size_str] = picojson::value(queue_size_);
                 obj[messages_sent_str] = picojson::value(messages_sent_);
@@ -259,6 +265,10 @@ namespace lightq {
                     LOG_ERROR("Failed to parse json. Error[%s]", err.c_str());
                     LOG_RET_FALSE("failed");
                 }
+                if(v.get(topic_str).is<std::string>())
+                    topic_ = v.get(topic_str).get<std::string>();
+                 if(v.get(topic_type_str).is<std::string>())
+                    topic_type_ = v.get(topic_type_str).get<std::string>();
                 if(v.get(status_str).is<std::string>())
                     status_ = v.get(status_str).get<std::string>();
                 if(v.get(queue_size_str).is<int64_t>())
