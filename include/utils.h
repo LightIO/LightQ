@@ -19,9 +19,12 @@ namespace lightq {
 
     class utils {
     public:
+
         enum message_size {
             max_msg_size = 1024 * 1024,
-            max_small_msg_size = 256
+            max_small_msg_size = 256,
+            zmq_sync_wait = 1000, //ms
+            queue_poll_wait = 20,
 
         };
 
@@ -37,7 +40,12 @@ namespace lightq {
             size_t start_pos = str.find(from);
             if (start_pos == std::string::npos)
                 return false;
-            str.replace(start_pos, from.length(), to);
+
+            while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+                str.replace(start_pos, from.length(), to);
+                start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+            }
+
             return true;
         }
 
@@ -324,7 +332,7 @@ namespace lightq {
             ssize_t result = -1;
 
             while (bytestoRead > 0) {
-                result = read(fd, (void*)(buffer + bytesRead), bytestoRead);
+                result = read(fd, (void*) (buffer + bytesRead), bytestoRead);
                 //if failed to read
                 if (result < 0) {
                     //if read some of the buffer
@@ -392,6 +400,21 @@ namespace lightq {
                 bytes_written += result;
             }
             LOG_RET("Success", bytes_written);
+        }
+
+        /**
+         * sleep in mill sec
+         * @param msecs
+         */
+        static void sleep_ms(int msecs) {
+#if (defined (_WIN32))
+            Sleep(msecs);
+#else
+            struct timespec t;
+            t.tv_sec = msecs / 1000;
+            t.tv_nsec = (msecs % 1000) * 1000000;
+            nanosleep(&t, NULL);
+#endif
         }
 
         /**
