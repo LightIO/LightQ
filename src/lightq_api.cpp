@@ -120,7 +120,7 @@ lightq_producer_conn* init_producer(const char* userid, const char* password, co
             LOG_ERROR("Login Failed. response %s", response.c_str());
             LOG_RET("error", p_producer_conn);
         }
-        s_sleep(1000);
+        utils::sleep_ms(utils::zmq_sync_wait);
         lightq::connection_zmq* p_push_socket = new lightq::connection_zmq(resp.topic_, resp.bind_uri_,
                 lightq::connection::conn_publisher,
                 lightq::connection_zmq::zmq_push,
@@ -142,14 +142,14 @@ lightq_producer_conn* init_producer(const char* userid, const char* password, co
         strcpy(p_lightq_conn->password, password);
         strcpy(p_lightq_conn->broker_uri, broker_uri);
 
-
         p_producer_conn = new lightq_producer_conn();
         p_producer_conn->conn = p_lightq_conn;
         p_producer_conn->delay_pub_on_slow_consumer = true;
         p_producer_conn->last_queue_size = 0;
         p_producer_conn->pubDelayAlgorithm = publish_delay_algorithm;
+        strcpy(p_producer_conn->topic_type, "");
         LOG_EVENT("lightq_producer_conn for producer created successfully.");
-        s_sleep(1000);
+        utils::sleep_ms(utils::zmq_sync_wait);
         return p_producer_conn;
     } catch (std::exception& ex) {
         LOG_ERROR("Error: Exception [%s]", ex.what());
@@ -163,29 +163,30 @@ lightq_producer_conn* init_producer(const char* userid, const char* password, co
  * Free producer connection
  * @param conn
  */
- void free_producer_conn(lightq_producer_conn* producer_conn){
-     LOG_IN("producer_conn[%p]", producer_conn);
-     if(producer_conn == NULL) {
-         return;
-     }
-    
-     if(producer_conn->conn) {
-         if(producer_conn->conn->admin_conn) {
-              lightq::connection_zmq* p_admin_socket = static_cast<lightq::connection_zmq*> (producer_conn->conn->admin_conn);
-              delete p_admin_socket;
-              producer_conn->conn->admin_conn = NULL;
-         }
-         if(producer_conn->conn->client_conn) {
-              lightq::connection_zmq* p_push_socket = static_cast<lightq::connection_zmq*> (producer_conn->conn->client_conn);
-              delete p_push_socket;
-              producer_conn->conn->client_conn = NULL;
-         }
-         delete producer_conn->conn;
-     }
-     delete producer_conn;
-     LOG_OUT("");
-     
- }
+void free_producer_conn(lightq_producer_conn* producer_conn) {
+    LOG_IN("producer_conn[%p]", producer_conn);
+    if (producer_conn == NULL) {
+        return;
+    }
+
+    if (producer_conn->conn) {
+        if (producer_conn->conn->admin_conn) {
+            lightq::connection_zmq* p_admin_socket = static_cast<lightq::connection_zmq*> (producer_conn->conn->admin_conn);
+            delete p_admin_socket;
+            producer_conn->conn->admin_conn = NULL;
+        }
+        if (producer_conn->conn->client_conn) {
+            lightq::connection_zmq* p_push_socket = static_cast<lightq::connection_zmq*> (producer_conn->conn->client_conn);
+            delete p_push_socket;
+            producer_conn->conn->client_conn = NULL;
+        }
+        delete producer_conn->conn;
+    }
+    delete producer_conn;
+    LOG_OUT("");
+
+}
+
 /**
  * Publish message
  * @param conn
@@ -248,26 +249,31 @@ void publish_delay_algorithm(void *pconn) {
             return;
         }
         topic_stats stats;
-        if (p_producer_conn->conn->message_counter % 250000 == 0) {
+        uint32_t counter_divisor = 250000;
+        
+        if (p_producer_conn->conn->message_counter % counter_divisor == 0) {
             if (!get_stats(p_producer_conn->conn, &stats)) {
                 LOG_ERROR("Failed to get stats to determine queue depth");
                 return;
             }
+            strcpy(p_producer_conn->topic_type, stats.topic_type);
+            
 
             if (stats.queue_size > 10000) {
                 LOG_DEBUG("No subscribers are connecting. Waiting for subscribers to join");
                 s_sleep(stats.queue_size / 1000);
             } else if (p_producer_conn->last_queue_size < stats.queue_size) {
-                s_sleep((stats.queue_size - p_producer_conn->last_queue_size) / 100);
+                utils::sleep_ms((stats.queue_size - p_producer_conn->last_queue_size) / 100);
             }
             p_producer_conn->last_queue_size = stats.queue_size;
         }
-    } catch (std::exception& ex) {
-        LOG_ERROR("Error: Exception [%s]", ex.what());
-    } catch (...) {
-    }
 
-    LOG_OUT("");
+} catch (std::exception& ex) {
+    LOG_ERROR("Error: Exception [%s]", ex.what());
+} catch (...) {
+}
+
+LOG_OUT("");
 }
 
 /**
@@ -316,7 +322,7 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
             LOG_ERROR("Login Failed. response %s", response.c_str());
             LOG_RET("error", p_consumer_conn);
         }
-        s_sleep(1000);
+        utils::sleep_ms(utils::zmq_sync_wait);
         lightq::connection* p_consumer_socket = NULL;
         if (consumer_type == consumer_socket_type::zmq_consumer) {
             p_consumer_socket = new lightq::connection_zmq(resp.topic_, resp.bind_uri_,
@@ -350,7 +356,7 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
         p_consumer_conn->socket_type = consumer_type;
 
         LOG_EVENT("lightq_consumer_conn[%p] for consumer created successfully.", p_consumer_conn);
-        s_sleep(1000);
+        utils::sleep_ms(utils::zmq_sync_wait);
         return p_consumer_conn;
 
     } catch (std::exception& ex) {
@@ -364,34 +370,35 @@ lightq_consumer_conn* init_consumer(const char* userid, const char* password, co
  * Free producer connection
  * @param conn
  */
- void free_consumer_conn(lightq_consumer_conn* consumer_conn){
-     LOG_IN("consumer_conn[%p]", consumer_conn);
-     if(consumer_conn == NULL) {
-         return;
-     }
-     
-     if(consumer_conn->p_lightq_conn) {
-         if(consumer_conn->p_lightq_conn->admin_conn) {
-              lightq::connection_zmq* p_admin_socket = static_cast<lightq::connection_zmq*> (consumer_conn->p_lightq_conn->admin_conn);
-              delete p_admin_socket;
-              consumer_conn->p_lightq_conn->admin_conn = NULL;
-         }
-         if(consumer_conn->p_lightq_conn->client_conn) {
-              if(consumer_conn->socket_type == consumer_socket_type::zmq_consumer) {
+void free_consumer_conn(lightq_consumer_conn* consumer_conn) {
+    LOG_IN("consumer_conn[%p]", consumer_conn);
+    if (consumer_conn == NULL) {
+        return;
+    }
+
+    if (consumer_conn->p_lightq_conn) {
+        if (consumer_conn->p_lightq_conn->admin_conn) {
+            lightq::connection_zmq* p_admin_socket = static_cast<lightq::connection_zmq*> (consumer_conn->p_lightq_conn->admin_conn);
+            delete p_admin_socket;
+            consumer_conn->p_lightq_conn->admin_conn = NULL;
+        }
+        if (consumer_conn->p_lightq_conn->client_conn) {
+            if (consumer_conn->socket_type == consumer_socket_type::zmq_consumer) {
                 lightq::connection_zmq* p_push_socket = static_cast<lightq::connection_zmq*> (consumer_conn->p_lightq_conn->client_conn);
                 delete p_push_socket;
-              }else {
+            } else {
                 lightq::connection_socket* p_push_socket = static_cast<lightq::connection_socket*> (consumer_conn->p_lightq_conn->client_conn);
                 delete p_push_socket;
-              }
-              consumer_conn->p_lightq_conn->client_conn = NULL;
-         }
-         
-         delete consumer_conn->p_lightq_conn;
-     }
-     delete consumer_conn;
-     LOG_OUT("");
- }
+            }
+            consumer_conn->p_lightq_conn->client_conn = NULL;
+        }
+
+        delete consumer_conn->p_lightq_conn;
+    }
+    delete consumer_conn;
+    LOG_OUT("");
+}
+
 /**
  * Receive message - consumer
  * @param conn
@@ -403,7 +410,7 @@ int receive_message(lightq_consumer_conn* p_consumer_conn, char* buffer, uint32_
     LOG_IN("p_consumer_conn[%p], buffer[%s], buffer_length[%u]", p_consumer_conn, buffer, buffer_length);
     int bytes_read = -1;
     try {
-      
+
         if (p_consumer_conn->socket_type == consumer_socket_type::zmq_consumer) {
             connection_zmq *p_conn_sock = static_cast<connection_zmq*> (p_consumer_conn->p_lightq_conn->client_conn);
             bytes_read = p_conn_sock->read_msg(buffer, buffer_length);
@@ -411,7 +418,7 @@ int receive_message(lightq_consumer_conn* p_consumer_conn, char* buffer, uint32_
         } else {
             connection_socket *p_conn_sock = static_cast<connection_socket*> (p_consumer_conn->p_lightq_conn->client_conn);
             bytes_read = p_conn_sock->read_msg(buffer, buffer_length, false);
-             LOG_DEBUG("buffer read size[%d], data[%s]", bytes_read, buffer);
+            LOG_DEBUG("buffer read size[%d], data[%s]", bytes_read, buffer);
         }
     } catch (std::exception& ex) {
         LOG_ERROR("Error: Exception [%s]", ex.what());
@@ -450,7 +457,7 @@ bool get_stats(lightq_conn* p_lightq_conn, topic_stats* stats) {
             strcpy(stats->status, "error");
             LOG_RET_FALSE("Failed");
         }
-      //  std::cout << "Stats Response:" << response << std::endl;
+        //  std::cout << "Stats Response:" << response << std::endl;
         stats->messages_received = resp.messages_received_;
         stats->messages_sent = resp.messages_sent_;
         stats->publishers_count = resp.publishers_count_;
@@ -458,6 +465,7 @@ bool get_stats(lightq_conn* p_lightq_conn, topic_stats* stats) {
         strcpy(stats->status, resp.status_.c_str());
         stats->subscribers_count = resp.subscribers_count_;
         strcpy(stats->topic, resp.topic_.c_str());
+        strcpy(stats->topic_type, resp.topic_type_.c_str());
         stats->total_bytes_read = resp.total_bytes_read_;
         stats->total_bytes_written = resp.total_bytes_written_;
         LOG_RET_TRUE("success");
@@ -494,7 +502,7 @@ lightq_broker_mgr* init_broker(const char* admin_userid, const char* admin_passw
         lightq_broker_mgr *p_lightq_mgr = new lightq_broker_mgr();
         p_lightq_mgr->broker = static_cast<void*> (p_mgr);
         strcpy(p_lightq_mgr->broker_uri, bind_uri.c_str());
-         s_sleep(1000);
+        utils::sleep_ms(utils::zmq_sync_wait);
         LOG_RET("success", p_lightq_mgr);
     } catch (std::exception& ex) {
         LOG_ERROR("Error: Exception [%s]", ex.what());
@@ -507,19 +515,20 @@ lightq_broker_mgr* init_broker(const char* admin_userid, const char* admin_passw
  * Free producer connection
  * @param conn
  */
- void free_broker_mgr(lightq_broker_mgr* broker_mgr){
-     LOG_IN("broker_mgr[%p]", broker_mgr);
-     if(broker_mgr == NULL) {
-         return;
-     }
-     
-     if(broker_mgr->broker) {
-         broker_manager* mgr = static_cast<broker_manager*>(broker_mgr->broker);
-         delete mgr; 
-     }
-     delete broker_mgr;
-     LOG_OUT("");
- }
+void free_broker_mgr(lightq_broker_mgr* broker_mgr) {
+    LOG_IN("broker_mgr[%p]", broker_mgr);
+    if (broker_mgr == NULL) {
+        return;
+    }
+
+    if (broker_mgr->broker) {
+        broker_manager* mgr = static_cast<broker_manager*> (broker_mgr->broker);
+        delete mgr;
+    }
+    delete broker_mgr;
+    LOG_OUT("");
+}
+
 /**
  * run broker
  * @param broker
@@ -560,10 +569,10 @@ bool run_broker(lightq_broker_mgr* p_broker_mgr, bool block) {
  * @param storage_type
  * @return 
  */
-bool create_topic(const char* broker_uri, const char* topic,  const char* admin_userid, const char* admin_password,
+bool create_topic(const char* broker_uri, const char* topic, const char* admin_userid, const char* admin_password,
         const char* userid, const char* password, broker_storage_type storage_type) {
     LOG_IN("broker_uri[%s], topic[%s], admin_userid[%s], admin_password[%s], userid[%s], password[%s], storage_type[%d]",
-            broker_uri, topic,  admin_userid, admin_password, userid, password, storage_type);
+            broker_uri, topic, admin_userid, admin_password, userid, password, storage_type);
     try {
         lightq::connection_zmq admin_socket(topic, broker_uri,
                 connection::conn_publisher,
@@ -575,28 +584,28 @@ bool create_topic(const char* broker_uri, const char* topic,  const char* admin_
             LOG_ERROR("Failed to initialize  admin connection");
             return 0;
         }
-       
-            admin_cmd::create_topic_req req;
-            req.admin_password_ = admin_password;
-            req.admin_user_id_ = admin_userid;
-            if (storage_type == broker_storage_type::file_type) {
-                req.broker_type_ = "file";
-            } else {
-                req.broker_type_ = "queue";
-            }
-           
-            req.topic_ = topic;
-            req.user_id_ = userid;
-            req.password_ = password;
-            std::string response;
-            LOG_INFO("Sending %s", req.to_json().c_str())
-            ssize_t size = admin_socket.write_msg(req.to_json());
-            if (size <= 0) {
-                LOG_ERROR("Failed to create topic ");
-                return false;
-            }
-            admin_socket.read_msg(response);
-            LOG_EVENT("topic [%s] creation success", req.topic_.c_str());
+
+        admin_cmd::create_topic_req req;
+        req.admin_password_ = admin_password;
+        req.admin_user_id_ = admin_userid;
+        if (storage_type == broker_storage_type::file_type) {
+            req.broker_type_ = "file";
+        } else {
+            req.broker_type_ = "queue";
+        }
+
+        req.topic_ = topic;
+        req.user_id_ = userid;
+        req.password_ = password;
+        std::string response;
+        LOG_INFO("Sending %s", req.to_json().c_str())
+        ssize_t size = admin_socket.write_msg(req.to_json());
+        if (size <= 0) {
+            LOG_ERROR("Failed to create topic ");
+            return false;
+        }
+        admin_socket.read_msg(response);
+        LOG_EVENT("topic [%s] creation success", req.topic_.c_str());
         LOG_RET_TRUE("success");
     } catch (std::exception& ex) {
         LOG_ERROR("Error: Exception [%s]", ex.what());
@@ -664,8 +673,16 @@ void generate_random_string(char* buffer, unsigned size) {
     std::string message = utils::random_string(size);
     LOG_DEBUG("generate_random_string: message[%s]", message.c_str());
     strcpy(buffer, message.c_str());
-   // buffer[message.length()] = '\0';
-   
+    // buffer[message.length()] = '\0';
+
+}
+
+/**
+ * Sleep in mill seconds
+ * @param millseconds
+ */
+void sleep_ms(unsigned millseconds) {
+    utils::sleep_ms(millseconds);
 }
 
 
