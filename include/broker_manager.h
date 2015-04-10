@@ -193,6 +193,7 @@ namespace lightq {
             admin_cmd::stats_resp resp;
             resp.status_ = STATUS_SUCCESS;
             resp.topic_ = req.topic_;
+            resp.topic_type_ = it->second->get_config().get_broker_type_to_str();
             resp.queue_size_ = it->second->get_queue_size();
             resp.messages_received_ = it->second->get_total_msg_received();
             resp.messages_sent_ = it->second->get_total_msg_sent();
