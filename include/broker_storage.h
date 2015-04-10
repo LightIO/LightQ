@@ -70,10 +70,10 @@ namespace lightq {
                 message.reserve(utils::max_msg_size);
                 while(true) {
                     while(get_queue_size() <= 0) {
-                        s_sleep(10);
+                        utils::sleep_ms(utils::queue_poll_wait);
                     }
                     ssize_t bytes_read = get_message_from_queue(message);
-                    if(bytes_read) {
+                    if(bytes_read > 0) {
                         write_to_file(message, true);
                     }
                 }
@@ -250,7 +250,7 @@ namespace lightq {
         bool write_to_queue(const std::string& message) {
             LOG_IN("message: %u", message.length());
             while (!p_queue_->try_enqueue(message)) { 
-                s_sleep(3);// 
+                utils::sleep_ms(utils::queue_poll_wait); 
                 LOG_TRACE("Retrying to enqueue message");
             } 
             ++total_enqueued_messages_;
