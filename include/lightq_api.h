@@ -39,7 +39,12 @@ typedef int bool;
                 LOG_OFF = 9
     }lightq_loglevel;
     
-    
+    typedef enum {
+        queue_type,
+        file_type,
+        direct_type,
+        queue_file_type
+    } broker_storage_type;
    
     /**
      * Topic statistics 
@@ -47,6 +52,7 @@ typedef int bool;
     typedef struct {
            char status[128];
            char topic[256];
+           char topic_type[256];
            uint64_t queue_size;
            uint64_t messages_sent;
            uint64_t messages_received;
@@ -75,6 +81,7 @@ typedef int bool;
     typedef struct {
         lightq_conn *conn;
         uint64_t last_queue_size; //only used for determining if queue depth increasing
+        char topic_type[256];
         bool delay_pub_on_slow_consumer;
         void (*pubDelayAlgorithm)(void*);
     }lightq_producer_conn;
@@ -93,10 +100,7 @@ typedef int bool;
         consumer_socket_type socket_type;
     }lightq_consumer_conn;
     
-    typedef enum {
-        queue_type,
-        file_type
-    } broker_storage_type;
+    
     /**
      * Broker manager
      */
@@ -231,6 +235,13 @@ typedef int bool;
      * @param size
      */
     void generate_random_string(char* buffer, unsigned size);
+    
+    
+    /**
+     * sleep in mill second
+     * @param 
+     */
+    void sleep_ms(unsigned);
 
 
 #ifdef	__cplusplus
