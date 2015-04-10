@@ -2,7 +2,7 @@
 # General
 
 - [ ] Replace ZMQ based admin interface with TCP Socket
-- [ ]  C API for producer, consumer and broker
+- [X]  C API for producer, consumer and broker
 - [ ] SSL/TLS support
 - [ ] Cluster Support
 - [ ] Docker

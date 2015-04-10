@@ -6,3 +6,4 @@ examples/bin
 examples/logs
 examples/build
 bin
+/examples/make.sh
