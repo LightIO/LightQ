@@ -18,14 +18,7 @@ before_install:
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.9"; fi
 
-  - git clone --depth 1 $ZMQ_REPO zmqlib
-  - cd zmqlib
-  - ./autogen.sh
-  - ./configure
-  - make
-  - sudo make install
-  - sudo /sbin/ldconfig
-  - cd ..
+  - sudo apt-get install libzmq3-dev
  
 before_script:
  - mkdir build
