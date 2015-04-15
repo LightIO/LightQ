@@ -1,7 +1,7 @@
 language: cpp
 
 env:
- - ZMQ_REPO=zeromq4-1 BUILD_TYPE=default
+ - release
  
 compiler:
   - gcc
@@ -18,7 +18,14 @@ before_install:
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.9"; fi
 
-  - sudo apt-get install libzmq3-dev
+  - git clone https://github.com/zeromq/zeromq4-1 zeromq4-1
+  - cd zeromq4-1
+ - ./autogen.sh
+ - ./configure
+ - make
+ - sudo make install
+ - sudo /sbin/ldconfig
+ - cd ..
  
 before_script:
  - mkdir build
