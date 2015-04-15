@@ -1,5 +1,7 @@
 # LightQ 
 
+[![Build Status](https://travis-ci.org/LightIO/LightQ.svg?branch=master)](https://github.com/LightIO/LightQ)
+
 It is a high performance,  brokered messaging queue which supports transient (1M msg/sec with microseconds latency)  and durable (~300K msg/sec with milliseconds latency) queues. Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
 
 ###Features:
