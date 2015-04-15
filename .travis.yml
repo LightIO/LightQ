@@ -19,7 +19,8 @@ before_script:
  - cd build
 
 
-
+script:
+- cmake -DCMAKE_BUILD_TYPE=Release ..
 branches:
   only:
     - master
