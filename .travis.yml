@@ -20,12 +20,12 @@ before_install:
 
   - git clone https://github.com/zeromq/zeromq4-1 zeromq4-1
   - cd zeromq4-1
- - ./autogen.sh
- - ./configure
- - make
- - sudo make install
- - sudo /sbin/ldconfig
- - cd ..
+  - ./autogen.sh
+  - ./configure
+  - make
+  - sudo make install
+  - sudo /sbin/ldconfig
+  - cd ..
  
 before_script:
  - mkdir build
