@@ -1,23 +1,25 @@
 # LightQ 
 
-It is a high performance,  brokered messaging queue which supports transient (1M msg/sec)  and durable (~300K msg/sec) queues. Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
+It is a high performance,  brokered messaging queue which supports transient (1M msg/sec with microseconds latency)  and durable (~300K msg/sec with milliseconds latency) queues. Durable queues are similar to <B>Kafka</B>  where data are written to the file and consumers consume from the file.
 
 ###Features:
-1. Transient and durable queue (similar to <B>Kafka</B> where producer writes to the file, consumer reads from the file)
-2. Authentication per topic (userid/password validation)
-3. Header only project (embed within your project) 
-4. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
-5. Consumer as Subscribers (Each consumer gets a copy of a message)
-6. Both subscriber and pipelining mode are supported for a single topic
-7. Multi Producers/Consumers for a single topic
-8. Unlimited* topics per broker
-9. JSON protocol to create topic and join topic (at runtime)
-10. C++11 support/require
-11. Logging support
-12. Dynamic port allocation for topic and consumer/producer bind uri
-13. Apache License
-14. Cluster support (todo)
-15. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
+1. [High Performance - 1M+ msg/sec](https://github.com/LightIO/LightQ/blob/master/README.md#performance)
+2. [Low Latency - in microseconds](https://github.com/LightIO/LightQ/blob/master/LatencyTests.md)
+3. Transient and durable queue (similar to <B>Kafka</B> where producer writes to the file, consumer reads from the file)
+4. Authentication per topic (userid/password validation)
+5. Header only project (embed within your project) 
+6. Consumer in load balancing mode(pipeline):  One of the consumer gets a message mostly in round robin)
+7. Consumer as Subscribers (Each consumer gets a copy of a message)
+8. Both subscriber and pipelining mode are supported for a single topic
+9. Multi Producers/Consumers for a single topic
+10. Unlimited* topics per broker
+11. JSON protocol to create topic and join topic (at runtime)
+12. C++11 support/require
+13. Logging support
+14. Dynamic port allocation for topic and consumer/producer bind uri
+15. Apache License
+16. Cluster support (todo)
+17. Client API (todo): C, Go, Java, Rust, Lua, Ruby 
 
 
 It is mostly header only project with main.cpp as an example for broker, producer and consumer.
