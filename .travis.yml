@@ -15,7 +15,7 @@ before_install:
   - echo `g++ --version`
   - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.9-dev; fi
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.9"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
   - sudo apt-get install uuid-dev
   - git clone --depth 1 git://github.com/jedisct1/libsodium.git -b 0.4.5 libsodium
   - cd libsodium
