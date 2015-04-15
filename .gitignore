@@ -3,6 +3,7 @@ build
 logs
 nbproject
 .idea
+.idea/dictionaries
 .idea/*
 examples/bin
 examples/logs
