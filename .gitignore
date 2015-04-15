@@ -9,5 +9,5 @@ examples/bin
 examples/logs
 examples/build
 examples/lib
-bin/logs
+bin
 /examples/make.sh
