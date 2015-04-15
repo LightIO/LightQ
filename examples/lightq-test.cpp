@@ -7,10 +7,9 @@
 
 //#include <cstdlib>
 #include <iostream>
-#include <chrono>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
+//#include <boost/lexical_cast.hpp>
+//#include <boost/algorithm/string.hpp>
 
 #include "../include/log.h"
 #include "../include/broker_manager.h"
@@ -21,7 +20,7 @@
 #define TID pthread_self()
 #define PID getpid()
 
-#define stringify( name ) # name
+#define stringify(name) # name
 using namespace std::chrono;
 using namespace std;
 using namespace lightq;
@@ -29,12 +28,13 @@ using namespace lightq;
 
 void producer_client(uint64_t counter, uint32_t payload_size, bool compress = false) {
     LOG_IN("producer num_messages[%lld] message_size[%u], compress[%d]", counter, payload_size, compress);
-    connection_zmq admin_socket("lightq_topic", "tcp://127.0.0.1:5000",
-            connection::conn_publisher,
-            connection_zmq::zmq_req,
-            connection::connect_socket,
-            false,
-            false);
+    connection_zmq admin_socket(
+        "lightq_topic", "tcp://127.0.0.1:5000",
+        connection::conn_publisher,
+        connection_zmq::zmq_req,
+        connection::connect_socket,
+        false,
+        false);
     if (!admin_socket.init() && admin_socket.run()) {
         LOG_ERROR("Failed to initialize producer for admin connection");
         return;
@@ -63,12 +63,14 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
     }
 
     std::string uri = resp.bind_uri_;
-    boost::replace_all(uri, "*", "127.0.0.1");
-    connection_zmq push_socket(resp.topic_, uri, connection::conn_publisher,
-            connection_zmq::zmq_push,
-            connection::connect_socket,
-            false,
-            false);
+    utils::replace(uri, "*", "127.0.0.1");
+    //boost::replace_all(uri, "*", "127.0.0.1");
+    connection_zmq push_socket(
+        resp.topic_, uri, connection::conn_publisher,
+        connection_zmq::zmq_push,
+        connection::connect_socket,
+        false,
+        false);
     if (!push_socket.init()) {
         LOG_ERROR("Failed to initialize producer push connection");
         return;
@@ -80,7 +82,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
 
     if (compress) {
         std::string compressed;
-        utils::zlib_compress_buffer((void*) message.c_str(), message.length(), compressed);
+        utils::zlib_compress_buffer((void *) message.c_str(), message.length(), compressed);
         LOG_EVENT("Compressed size: %d", compressed.length());
     }
     uint64_t num_bytes_sent = 0;
@@ -157,17 +159,17 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
     push_socket.write_msg("STOP");
 
 
-
     std::cout.unsetf(ios::hex);
 
     duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
     std::cout << "Total Messages:" << counter << ", Time Taken:" << time_span.count() << " seconds." << std::endl;
     std::cout << "Start Time: " << utils::get_currenttime_milliseconds(t1)
-            << ", End Time:" << utils::get_currenttime_milliseconds(t2) << std::endl;
+    << ", End Time:" << utils::get_currenttime_milliseconds(t2) << std::endl;
 
     std::cout << (uint64_t) (counter / time_span.count()) << " messages per seconds." << std::endl;
     std::cout << num_bytes_sent << " bytes sent" << std::endl;
-    std::cout << std::fixed << std::setprecision(4) << num_bytes_sent / (1024 * 1024 * time_span.count()) << " MB per second." << std::endl;
+    std::cout << std::fixed << std::setprecision(4) << num_bytes_sent / (1024 * 1024 * time_span.count()) <<
+    " MB per second." << std::endl;
 
 
     while (true) {
@@ -182,7 +184,7 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
         LOG_EVENT("Stats :%s ", response.c_str());
         LOG_DEBUG("Stats :%s ", response.c_str());
         std::cout << "Stats : " << response << std::endl;
-        utils::sleep_ms(10*1000);
+        utils::sleep_ms(10 * 1000);
     }
 
 
@@ -191,14 +193,15 @@ void producer_client(uint64_t counter, uint32_t payload_size, bool compress = fa
 
 }
 
-void consumer_client(const std::string& broker_type, const std::string& socket_type, const std::string& sub_mod) {
+void consumer_client(const std::string &broker_type, const std::string &socket_type, const std::string &sub_mod) {
     LOG_IN("consumer broker_type[%s] socket_type[%s]", broker_type.c_str(), socket_type.c_str());
-    connection_zmq admin_socket("lightq_topic", "tcp://127.0.0.1:5000",
-            connection::conn_consumer,
-            connection_zmq::zmq_req,
-            connection::connect_socket,
-            false,
-            false);
+    connection_zmq admin_socket(
+        "lightq_topic", "tcp://127.0.0.1:5000",
+        connection::conn_consumer,
+        connection_zmq::zmq_req,
+        connection::connect_socket,
+        false,
+        false);
     if (!admin_socket.init()) {
         LOG_ERROR("Failed to initialize producer for admin connection");
         return;
@@ -229,22 +232,26 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
 
     std::string uri = resp.bind_uri_;
 
-    boost::replace_all(uri, "*", "127.0.0.1");
+    utils::replace(uri, "*", "127.0.0.1");
     connection *p_pull_socket = NULL;
     if (socket_type == "socket") {
-        p_pull_socket = new connection_socket(resp.topic_, uri, connection::conn_consumer, connection::connect_socket, false);
-        if (!((connection_socket*) p_pull_socket)->init()) {
+        p_pull_socket = new connection_socket(
+            resp.topic_, uri, connection::conn_consumer, connection::connect_socket,
+            false);
+        if (!((connection_socket *) p_pull_socket)->init()) {
             LOG_ERROR("Failed to initialize consumer pull connection");
             return;
         }
     } else {
         if (sub_mod == "pull") {
             std::cout << "Connecting using pull" << std::endl;
-            p_pull_socket = new connection_zmq(resp.topic_, uri, connection::conn_consumer,
-                    connection_zmq::zmq_pull, connection::connect_socket, false, false);
+            p_pull_socket = new connection_zmq(
+                resp.topic_, uri, connection::conn_consumer,
+                connection_zmq::zmq_pull, connection::connect_socket, false, false);
         } else {
-            p_pull_socket = new connection_zmq(resp.topic_, uri, connection::conn_consumer,
-                    connection_zmq::zmq_sub, connection::connect_socket, false, false);
+            p_pull_socket = new connection_zmq(
+                resp.topic_, uri, connection::conn_consumer,
+                connection_zmq::zmq_sub, connection::connect_socket, false, false);
             // p_pull_socket..setsockopt(ZMQ_SUBSCRIBE, "", 0);
             std::cout << "Connecting using sub to topic:" << resp.topic_ << std::endl;
         }
@@ -272,7 +279,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
         if (socket_type_socket) {
 
 
-            connection_socket *p_conn_sock = (connection_socket*) p_pull_socket;
+            connection_socket *p_conn_sock = (connection_socket *) p_pull_socket;
             //                ssize_t off_sent = p_conn_sock->send_offset(offset);
             //                if (off_sent <= 0) {
             //                    s_sleep(5);
@@ -289,7 +296,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
                     continue;
                 } else if (result == 0) {
                     //  LOG_ERROR("timeout.reting after 1 ms");
-                   utils::sleep_ms(utils::zmq_sync_wait * 5);
+                    utils::sleep_ms(utils::zmq_sync_wait * 5);
                 }
                 if (use_buffer)
                     buffer[result] = '\0'; //remove last 4 bytes which is offset
@@ -297,12 +304,12 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
             }
         } else {
             //// while(result < )
-            if ((result = ((connection_zmq*) p_pull_socket)->read_msg(message)) < 0) {
+            if ((result = ((connection_zmq *) p_pull_socket)->read_msg(message)) < 0) {
                 LOG_ERROR("Failed to read message");
                 continue;
             } else if (result == 0) {
                 //  LOG_ERROR("timeout.reting after 1 ms");
-              utils::sleep_ms(utils::queue_poll_wait);
+                utils::sleep_ms(utils::queue_poll_wait);
             }
         }
 
@@ -350,10 +357,11 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
     duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
     std::cout << "Total Messages:" << counter << ", Time Taken:" << time_span.count() << " seconds." << std::endl;
     std::cout << "Start Time: " << utils::get_currenttime_milliseconds(t1)
-            << ", End Time:" << utils::get_currenttime_milliseconds(t2) << std::endl;
+    << ", End Time:" << utils::get_currenttime_milliseconds(t2) << std::endl;
     std::cout << (uint64_t) (counter / time_span.count()) << " messages per seconds." << std::endl;
     std::cout << num_bytes_received << " bytes received" << std::endl;
-    std::cout << std::fixed << std::setprecision(4) << num_bytes_received / (1024 * 1024 * time_span.count()) << " MB per second." << std::endl;
+    std::cout << std::fixed << std::setprecision(4) << num_bytes_received / (1024 * 1024 * time_span.count()) <<
+    " MB per second." << std::endl;
     delete p_pull_socket;
 
 
@@ -362,7 +370,7 @@ void consumer_client(const std::string& broker_type, const std::string& socket_t
 
 }
 
-static void enabled_loglevel(const std::string& level) {
+static void enabled_loglevel(const std::string &level) {
     LOG_EVENT("Enabling log level : %s", level.c_str());
     log::event_logger()->set_level(spdlog::level::notice);
 
@@ -384,9 +392,9 @@ static void enabled_loglevel(const std::string& level) {
 /*
  * 
  */
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 
-    log::init(argv[0], spdlog::level::trace);
+    log::init("logs", argv[0], spdlog::level::trace);
 
     std::string type;
     if (argc > 1) {
@@ -395,16 +403,17 @@ int main(int argc, char** argv) {
     //producer
     if (type == "producer") {
         if (argc < 2) {
-            std::cout << "Usage:" << std::string(argv[0]) << std::string("producer num_messages[1000000] msg_size[256] log_level[event] compress[false]") << std::endl;
+            std::cout << "Usage:" << std::string(argv[0]) <<
+            std::string("producer num_messages[1000000] msg_size[256] log_level[event] compress[false]") << std::endl;
             return 0;
         }
         uint64_t counter = 1000000;
         if (argc > 2) {
-            counter = boost::lexical_cast<uint64_t>(argv[2]);
+            counter = strtoull(argv[2], NULL, 10);
         }
         uint32_t payload_size = 256;
         if (argc > 3) {
-            payload_size = boost::lexical_cast<uint64_t>(argv[3]);
+            payload_size = atoi(argv[3]);
         }
         if (argc > 4) {
             enabled_loglevel(argv[4]);
@@ -421,7 +430,8 @@ int main(int argc, char** argv) {
 
     } else if (type == "consumer") {
         if (argc < 2) {
-            std::cout << "Usage:" << std::string(argv[0]) << std::string(" consumer broker_type[queue/file] socket_type[zmq/socket] [log_level]") << std::endl;
+            std::cout << "Usage:" << std::string(argv[0]) <<
+            std::string(" consumer broker_type[queue/file] socket_type[zmq/socket] [log_level]") << std::endl;
             return 0;
         }
         std::string broker_type = "queue";
@@ -452,16 +462,18 @@ int main(int argc, char** argv) {
         if (!mgr.init()) {
             LOG_ERROR("Failed to initialize");
         }
-        std::thread t = std::thread([&] {
-            mgr.run();
-        });
+        std::thread t = std::thread(
+            [&] {
+                mgr.run();
+            });
 
-        connection_zmq admin_socket("lightq_topic", "tcp://127.0.0.1:5000",
-                connection::conn_publisher,
-                connection_zmq::zmq_req,
-                connection::connect_socket,
-                false,
-                false);
+        connection_zmq admin_socket(
+            "lightq_topic", "tcp://127.0.0.1:5000",
+            connection::conn_publisher,
+            connection_zmq::zmq_req,
+            connection::connect_socket,
+            false,
+            false);
         if (!admin_socket.init() && admin_socket.run()) {
             LOG_ERROR("Failed to initialize producer for admin connection");
             return 0;

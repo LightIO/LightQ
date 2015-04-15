@@ -7,12 +7,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <unistd.h>
+#ifndef __APPLE__
+#include <getopt.h>
+#endif
 #include <ctype.h>
 #include <string.h>
-#include <string.h>
-#include <pthread.h> 
+#include <pthread.h>
 #include "lightq_api.h"
 
 typedef struct {
@@ -22,18 +23,18 @@ typedef struct {
     char broker_uri[256];
     consumer_socket_type type;
     uint64_t messages_to_receive;
-    lightq_consumer_conn* p_consumer;
-} consumer_info;
+    lightq_consumer_conn *p_consumer;
+}consumer_info;
 
 /**
  * execute consumer in a thread
  * @param p_con_info
  */
-static void execute_consumer(void* p_con_info) {
+static void execute_consumer(void *p_con_info) {
 
     unsigned buffer_size = 1024 * 1024;
     char buffer[buffer_size];
-    consumer_info *p_info = (consumer_info*) p_con_info;
+    consumer_info *p_info = (consumer_info *) p_con_info;
 
 
     if (p_info->p_consumer) {
@@ -55,25 +56,37 @@ static void execute_consumer(void* p_con_info) {
                 start_time = get_current_time_millsec();
                 buffer[bytes_received] = '\0';
                 producer_start_time = strtoul(buffer, NULL, 10);
-                printf("Topic[%s], First message:  producer start time [%lu], consumer start time [%lu] \n", p_info->topic, producer_start_time, start_time);
-        
-                
+                printf(
+                    "Topic[%s], First message:  producer start time [%lu], consumer start time [%lu] \n",
+                    p_info->topic, producer_start_time, start_time);
+
+
             }
         }
 
         end_time = get_current_time_millsec();
-       
+
         unsigned total_time_ms = end_time - start_time;
         float total_time_sec = total_time_ms / 1000;
-        printf("Topic[%s], Total message received [%llu] in [%.2f]sec\n", p_info->topic, p_info->messages_to_receive, total_time_sec);
-        printf("Topic[%s], Average messages received per second [%.2f]\n", p_info->topic, p_info->messages_to_receive / total_time_sec);
-        printf("Topic[%s], Total bytes received [%llu], average bandwidth received per second [%.4f]MB\n", p_info->topic, total_bytes_received, total_bytes_received / (1024 * 1024 * total_time_sec));
+        printf(
+            "Topic[%s], Total message received [%llu] in [%.2f]sec\n", p_info->topic, p_info->messages_to_receive,
+            total_time_sec);
+        printf(
+            "Topic[%s], Average messages received per second [%.2f]\n", p_info->topic,
+            p_info->messages_to_receive / total_time_sec);
+        printf(
+            "Topic[%s], Total bytes received [%llu], average bandwidth received per second [%.4f]MB\n",
+            p_info->topic, total_bytes_received, total_bytes_received / (1024 * 1024 * total_time_sec));
         printf("Topic[%s], Last Message: consumer endtime [%lu]\n", p_info->topic, end_time);
         printf("Topic[%s], Consumer first message latency [%lu] ms\n", p_info->topic, start_time - producer_start_time);
         unsigned long consumer_end_to_producer_start_time = end_time - producer_start_time;
-        printf("Topic[%s], Consumer last message received -   producer first message sent timestamp [%lu]\n", p_info->topic, consumer_end_to_producer_start_time);
-        printf("Topic[%s], Average latency [%.2f] nano sec\n", p_info->topic, (double)((consumer_end_to_producer_start_time * 1000000/ p_info->messages_to_receive)));
-       
+        printf(
+            "Topic[%s], Consumer last message received -   producer first message sent timestamp [%lu]\n",
+            p_info->topic, consumer_end_to_producer_start_time);
+        printf(
+            "Topic[%s], Average latency [%.2f] nano sec\n", p_info->topic,
+            (double) ((consumer_end_to_producer_start_time * 1000000 / p_info->messages_to_receive)));
+
     } else {
         printf("Failed to initialize consumer\n");
     }
@@ -83,15 +96,15 @@ static void execute_consumer(void* p_con_info) {
 /*
  * start producer
  */
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 
     int c;
     char *userid = "test_admin";
     char *password = "T0p$3cr31";
     char *broker_uri = "tcp://127.0.0.1:5500";
     char *loglevel = "event";
-    char * topic = "test";
-    char * consumer_type = "zmq";
+    char *topic = "test";
+    char *consumer_type = "zmq";
     uint64_t messages_to_receive = 1000000;
     unsigned num_partitions = 1;
 
@@ -99,8 +112,10 @@ int main(int argc, char** argv) {
 
         switch (c) {
             case 'h':
-                printf("Usage: [%s] [-t topic[%s]] [-u userid[%s]]  [-p password[%s]]  [-b broker_uri[%s]] [-c consumer_type[%s]] [-m messages_to_receive[%llu]] [-n num_partitions[%u]] [-l loglevel[event]]\n",
-                        argv[0], topic, userid, password, broker_uri, consumer_type, messages_to_receive, num_partitions);
+                printf(
+                    "Usage: [%s] [-t topic[%s]] [-u userid[%s]]  [-p password[%s]]  [-b broker_uri[%s]] [-c consumer_type[%s]] [-m messages_to_receive[%llu]] [-n num_partitions[%u]] [-l loglevel[event]]\n",
+                    argv[0], topic, userid, password, broker_uri, consumer_type, messages_to_receive,
+                    num_partitions);
                 return 0;
             case 't':
                 topic = optarg;
@@ -131,7 +146,8 @@ int main(int argc, char** argv) {
                 if (isprint(optopt))
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 else
-                    fprintf(stderr,
+                    fprintf(
+                        stderr,
                         "Unknown option character `\\x%x'.\n",
                         optopt);
                 return 1;
@@ -141,13 +157,14 @@ int main(int argc, char** argv) {
     }
 
 
-     printf(" [%s] [-t topic[%s]] [-u userid[%s]]  [-p password[%s]]  [-b broker_uri[%s]] "
-             "[-c consumer_type[%s]] [-m messages_to_receive[%llu]] [-n num_partitions[%u]] [-l loglevel[%s]]\n",
-             argv[0], topic, userid, password, broker_uri, 
-             consumer_type, messages_to_receive, num_partitions, loglevel);
+    printf(
+        " [%s] [-t topic[%s]] [-u userid[%s]]  [-p password[%s]]  [-b broker_uri[%s]] "
+            "[-c consumer_type[%s]] [-m messages_to_receive[%llu]] [-n num_partitions[%u]] [-l loglevel[%s]]\n",
+        argv[0], topic, userid, password, broker_uri,
+        consumer_type, messages_to_receive, num_partitions, loglevel);
 
     lightq_loglevel level = str_to_loglevel(loglevel);
-    if (!init_log(argv[0], level)) {
+    if (!init_log("logs", argv[0], level)) {
         printf("Failed to initialize logging\n");
         return -1;
     } else {
@@ -161,7 +178,7 @@ int main(int argc, char** argv) {
     }//
 
 
-    pthread_t tid [10];
+    pthread_t tid[10];
     consumer_info coninfo[10];
     char topic_buffer[256];
     for (unsigned i = 0; i < num_partitions; ++i) {
@@ -178,24 +195,22 @@ int main(int argc, char** argv) {
     }
 
 
-
     for (unsigned i = 0; i < num_partitions; ++i) {
         // execute_consumer(coninfo[i]);
-        int err = pthread_create(&(tid[i]), NULL, (void*) &execute_consumer, (void*) &coninfo[i]);
+        int err = pthread_create(&(tid[i]), NULL, (void *) &execute_consumer, (void *) &coninfo[i]);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
         //else
-           // printf("\n Thread created successfully\n");
+        // printf("\n Thread created successfully\n");
     }
 
     for (unsigned i = 0; i < num_partitions; ++i) {
-      //  printf("Waiting for joininh thread\n");
+        //  printf("Waiting for joininh thread\n");
         pthread_join(tid[i], NULL);
     }
     for (unsigned i = 0; i < num_partitions; ++i) {
         free_consumer_conn(coninfo[i].p_consumer);
     }
-
 
 
     return (EXIT_SUCCESS);

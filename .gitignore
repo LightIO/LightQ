@@ -1,9 +1,12 @@
 dist
 build
 logs
-nbproject/private
+nbproject
+.idea
+.idea/*
 examples/bin
 examples/logs
 examples/build
-bin
+examples/lib
+bin/logs
 /examples/make.sh
