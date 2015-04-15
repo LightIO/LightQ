@@ -4,7 +4,7 @@
 - [ ] Replace ZMQ based admin interface with TCP Socket
 - [X] Replace Netbeans build with CMake
 - [X]  C API for producer, consumer and broker
-- [ ]  Linux Support
+- [X ]  Linux Support
 - [ ] Consumer in pull mode for durable queues (similar to Kafka)
 - [ ] Kafka client support
 - [ ] HTTP/2 protocol support for producer/consumer
