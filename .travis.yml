@@ -4,7 +4,6 @@ env:
  - release
 compiler:
   - gcc
-  - clang-3.7
 
 before_install:
   - echo $LANG
@@ -13,7 +12,6 @@ before_install:
   - sudo apt-get update -qq
   - echo $CXX
   - echo `g++ --version`
-  - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew install llvm && brew link --force llvm; fi
   - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.9-dev; fi
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
