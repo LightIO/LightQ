@@ -311,8 +311,7 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
         
-##License :
-[![Apache License](http://img.shields.io/badge/license-apache-blue.svg?style=flat)](LICENSE)
+##License : [![Apache License](http://img.shields.io/badge/license-apache-blue.svg?style=flat)](LICENSE)
 
 
 Dependecies:
