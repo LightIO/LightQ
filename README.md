@@ -311,10 +311,10 @@ Start Producer:  (client: producer, number of messages 10M, payload size: 100 by
     ./dist/Release/GNU-MacOSX/lightq producer 10000000 100 event
     
         
-##License : [![Apache License](http://img.shields.io/badge/license-apache-blue.svg?style=flat)](LICENSE)
+##License : [![Apache License](http://img.shields.io/badge/license-apache-blue.svg?style=flat)](LICENSE-Apache)
 
 
 Dependecies:
-    [ZeroMQ LGPL](http://zeromq.org/area:licensing) 
+   ZeroMQ LGPL: [![ZeroMQ LGPL](http://img.shields.io/badge/license-lgpl-blue.svg?style=flat)](http://zeromq.org/area:licensing)
 
 
