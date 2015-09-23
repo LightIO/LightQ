@@ -96,9 +96,13 @@ namespace lightq {
                   LOG_DEBUG("Received zero byte.  continue");
                   continue;
               }
+              //sec: validate userinput length
+              if(bytes_read > max_read_buffer_) {
+                LOG_ERROR("Received command length :%ld excceds the allowed command lenth. returning invalid.", bytes_read);
+                 return reply_invalid_cmd(message);
+              }
               LOG_DEBUG("Received :%s", message.c_str());
               //  LOG_EVENT("Received command: %s", message.c_str());
-
 
               bool result = process_command(
                   message); //PERF:  Check if we need to have a seperate thread to process the command
