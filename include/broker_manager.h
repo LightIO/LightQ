@@ -99,7 +99,7 @@ namespace lightq {
               //sec: validate userinput length
               if(bytes_read > max_read_buffer_) {
                 LOG_ERROR("Received command length :%ld excceds the allowed command lenth. returning invalid.", bytes_read);
-                 return reply_invalid_cmd(message);
+                 return reply_invalid_cmd(CMD_SERVER_ERROR_EXCEED_MSG_LENGTH);
               }
               LOG_DEBUG("Received :%s", message.c_str());
               //  LOG_EVENT("Received command: %s", message.c_str());
@@ -567,6 +567,7 @@ namespace lightq {
       const std::string CMD_UNAUTH = "unauthorized_access";
       const std::string CMD_LOGIN_SUCCESS = "login_success";
       const std::string CMD_SERVER_ERROR = "server_error";
+      const std::string CMD_SERVER_ERROR_EXCEED_MSG_LENGTH = "server_error: message lenth exceeded max buffer size";
       const std::string CMD_STATS = "stats";
       const std::string CMD_JOIN = "join";
       const std::string CMD_CREATE_TOPIC = "create_topic";
