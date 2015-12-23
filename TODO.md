@@ -12,7 +12,7 @@
 - [ ] SSL/TLS support
 - [ ] Configurable max message size
 - [ ] Add ability to reload config on signal
-- [ ] Docker
+- [ ] Mac Brew support
 
 
 
