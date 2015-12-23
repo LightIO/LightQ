@@ -16,7 +16,7 @@ before_install:
   - echo $CXX
   - echo `g++ --version`
   #- if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.9-dev; fi
-  #- if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qq g++-4.9; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
   #OSX
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gcc49; fi
