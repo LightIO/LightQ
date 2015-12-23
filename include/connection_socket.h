@@ -281,6 +281,7 @@ namespace lightq {
                               }
                           } else {
                               ssize_t result = utils::read_line(i, buffer_, utils::max_msg_size);
+                              LOG_DEBUG("Read line with bytes : %d", result);
                           }
                       }
                   }

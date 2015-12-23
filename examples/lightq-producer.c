@@ -81,11 +81,11 @@ static void execute_publisher(void *p_pub) {
 int main(int argc, char **argv) {
 
     int c;
-    char *userid = "test_admin";
-    char *password = "T0p$3cr31";
-    char *broker_uri = "tcp://127.0.0.1:5500";
-    char *loglevel = "event";
-    char *topic = "test";
+    const char *userid = "test_admin";
+    const char *password = "T0p$3cr31";
+    const char *broker_uri = "tcp://127.0.0.1:5500";
+    const char *loglevel = "event";
+    const char *topic = "test";
     uint32_t message_size = 100;
     uint64_t messages_to_send = 1000000;
     unsigned num_partitions = 1;

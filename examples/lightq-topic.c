@@ -20,15 +20,15 @@
 int main(int argc, char **argv) {
 
     int c;
-    char *admin_userid = "lightq_admin";
-    char *admin_password = "T0p$3cr31";
-    char *userid = "test_admin";
-    char *password = "T0p$3cr31";
-    char *bind_uri = "tcp://127.0.0.1:5500";
-    char *topic = "test";
-    char *storage = "queue";
+    const char *admin_userid = "lightq_admin";
+    const char *admin_password = "T0p$3cr31";
+    const char *userid = "test_admin";
+    const char *password = "T0p$3cr31";
+    const char *bind_uri = "tcp://127.0.0.1:5500";
+    const char *topic = "test";
+    const char *storage = "queue";
 
-    char *loglevel = "event";
+    const char *loglevel = "event";
     unsigned num_partitions = 1;
 
 

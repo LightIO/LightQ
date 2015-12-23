@@ -230,6 +230,10 @@ namespace lightq {
           }
       }
 
+      connection::endpoint_type get_endpoint_type () {
+          return producer_endpoint_type_;
+      }
+
   private:
       broker_storage *p_storage_;
       producer_config config_;

@@ -21,12 +21,12 @@
 int main(int argc, char **argv) {
 
     int c;
-    char *admin_userid = "lightq_admin";
-    char *admin_password = "T0p$3cr31";
-    char *bind_ip = "*";
+    const char *admin_userid = "lightq_admin";
+    const char *admin_password = "T0p$3cr31";
+    const char *bind_ip = "*";
     unsigned bind_port = 5500;
-    char *transport = "tcp";
-    char *loglevel = "event";
+    const char *transport = "tcp";
+    const char *loglevel = "event";
 
 
     while ((c = getopt(argc, argv, "hu:p:i:b:t:l:")) != -1) {
