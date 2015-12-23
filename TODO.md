@@ -13,6 +13,7 @@
 - [ ] Configurable max message size
 - [ ] Add ability to reload config on signal
 - [ ] Mac Brew support
+- 
 
 
 
