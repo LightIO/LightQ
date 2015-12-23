@@ -19,7 +19,8 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qq g++-4.9; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
   #OSX
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gcc49; fi
+  #- if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gcc49; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install cmake; fi
  
   - git clone --depth 1 git://github.com/jedisct1/libsodium.git -b 0.4.5 libsodium
   - cd libsodium
