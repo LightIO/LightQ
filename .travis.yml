@@ -9,14 +9,18 @@ before_install:
   - echo $LANG
   - echo $LC_ALL
   - echo $TRAVIS_OS_NAME
+  #LINUX
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  sudo apt-get update -qq; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  sudo apt-get install uuid-dev; fi
   - echo $CXX
   - echo `g++ --version`
-  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.9-dev; fi
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
+  #- if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.9-dev; fi
+  #- if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  sudo apt-get install uuid-dev; fi
+  #OSX
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gcc49; fi
+ 
   - git clone --depth 1 git://github.com/jedisct1/libsodium.git -b 0.4.5 libsodium
   - cd libsodium
   - ./autogen.sh
