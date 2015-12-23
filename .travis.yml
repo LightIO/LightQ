@@ -8,6 +8,7 @@ compiler:
 before_install:
   - echo $LANG
   - echo $LC_ALL
+  - echo $TRAVIS_OS_NAME
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then  sudo apt-get update -qq
   - echo $CXX
