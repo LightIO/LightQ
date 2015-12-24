@@ -33,7 +33,7 @@ before_install:
   - ./configure
   - make
   - sudo make install
-  - sudo /sbin/ldconfig
+  #- sudo /sbin/ldconfig
   - cd ..
  
 before_script:
