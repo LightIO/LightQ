@@ -1,5 +1,5 @@
 # LightQ
-A high performance, brokered messaging queue (1M+msg/sec)
+A high performance, brokered messaging queue
 
 [![Build Status](https://travis-ci.org/LightIO/LightQ.svg?branch=master)](https://travis-ci.org/LightIO/LightQ)
 
